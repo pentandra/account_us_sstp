@@ -31,7 +31,7 @@ except ImportError:
     prog = os.path.basename(sys.argv[0])
     sys.exit("proteus must be installed to use %s" % prog)
 
-SUBREGIONS = {
+DIVISIONS = {
     'D1': ['09', '23', '25', '33', '44', '50'],
     'D2': ['34', '36', '42'],
     'D3': ['17', '18', '26', '39', '55'],
@@ -42,7 +42,7 @@ SUBREGIONS = {
     'D8': ['04', '08', '16', '30', '32', '35', '49', '56'],
     'D9': ['02', '06', '15', '41', '53'],
     }
-REGION2PARENT = {c: p for p, r in SUBREGIONS.items() for c in r}
+REGION2PARENT = {c: p for p, r in DIVISIONS.items() for c in r}
 
 def _progress(iterable):
     if ProgressBar:
