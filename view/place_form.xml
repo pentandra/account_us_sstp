@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<form col="6">
+    <label name="name"/>
+    <field name="name"/>
+    <label name="parent"/>
+    <field name="parent"/>
+    <label name="active"/>
+    <field name="active"/>
+    <label name="region"/>
+    <field name="region"/>
+    <label name="country"/>
+    <field name="country"/>
+    <label name="subdivision"/>
+    <field name="subdivision"/>
+    <label name="code_gnis"/>
+    <field name="code_gnis"/>
+    <label name="code_fips"/>
+    <field name="code_fips"/>
+    <label name="level"/>
+    <field name="level"/>
+    <label name="class_code"/>
+    <field name="class_code"/>
+
+    <field name="children" colspan="6"/>
+</form>

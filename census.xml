@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+
+<tryton>
+    <data>
+
+        <record model="ir.ui.view" id="class_code_view_form">
+            <field name="model">census.class_code</field>
+            <field name="type">form</field>
+            <field name="name">class_code_form</field>
+        </record>
+        <record model="ir.ui.view" id="class_code_view_list">
+            <field name="model">census.class_code</field>
+            <field name="type">tree</field>
+            <field name="name">class_code_list</field>
+        </record>
+
+        <record model="ir.ui.view" id="census_region_view_form">
+            <field name="model">census.region</field>
+            <field name="type">form</field>
+            <field name="name">census_region_form</field>
+        </record>
+        <record model="ir.ui.view" id="census_region_view_list">
+            <field name="model">census.region</field>
+            <field name="type">tree</field>
+            <field name="priority" eval="10"/>
+            <field name="name">census_region_list</field>
+        </record>
+
+        <record model="ir.ui.view" id="census_region_view_tree">
+            <field name="model">census.region</field>
+            <field name="type">tree</field>
+            <field name="priority" eval="20"/>
+            <field name="field_childs">divisions</field>
+            <field name="name">census_region_tree</field>
+        </record>
+
+        <record model="ir.action.act_window" id="act_census_region_tree">
+            <field name="name">Census Regions</field>
+            <field name="res_model">census.region</field>
+            <field name="domain" eval="[('parent', '=', None)]" pyson="1"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_census_region_tree_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="census_region_view_tree"/>
+            <field name="act_window" ref="act_census_region_tree"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_census_region_tree_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="census_region_view_form"/>
+            <field name="act_window" ref="act_census_region_tree"/>
+        </record>
+        <menuitem
+            parent="country.menu_country"
+            action="act_census_region_tree"
+            sequence="20"
+            id="menu_census_region_tree"/>
+
+        <record model="ir.action.act_window" id="act_census_region_form">
+            <field name="name">Divisions</field>
+            <field name="res_model">census.region</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_census_region_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="census_region_view_list"/>
+            <field name="act_window" ref="act_census_region_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_census_region_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="census_region_view_form"/>
+            <field name="act_window" ref="act_census_region_form"/>
+        </record>
+        <menuitem
+            parent="menu_census_region_tree"
+            action="act_census_region_form"
+            sequence="10"
+            id="menu_census_region_form"/>
+
+        <record model="ir.model.access" id="access_census_region">
+            <field name="model" search="[('model', '=', 'census.region')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_census_region_admin">
+            <field name="model" search="[('model', '=', 'census.region')]"/>
+            <field name="group" ref="res.group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <record model="ir.ui.view" id="place_view_form">
+            <field name="model">census.place</field>
+            <field name="type">form</field>
+            <field name="name">place_form</field>
+        </record>
+        <record model="ir.ui.view" id="place_view_tree">
+            <field name="model">census.place</field>
+            <field name="type">tree</field>
+            <field name="field_childs">children</field>
+            <field name="name">place_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_place_form">
+            <field name="name">Places</field>
+            <field name="res_model">census.place</field>
+            <field name="domain" eval="[('parent', '=', None)]" pyson="1"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_place_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="place_view_tree"/>
+            <field name="act_window" ref="act_place_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_place_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="place_view_form"/>
+            <field name="act_window" ref="act_place_form"/>
+        </record>
+        <menuitem
+            parent="menu_census_region_tree"
+            action="act_place_form"
+            sequence="20"
+            id="menu_place_form"/>
+
+        <record model="ir.action.act_window" id="act_place_by_region">
+            <field name="name">Places by Census Region</field>
+            <field name="res_model">census.place</field>
+            <field
+                name="domain"
+                eval="[('region', 'child_of', Eval('active_ids', []), 'parent'),('parent', '=', None)]"
+                pyson="1"/>
+        </record>
+        <record model="ir.action.keyword" id="act_place_by_region_keyword1">
+            <field name="keyword">tree_open</field>
+            <field name="model">census.region,-1</field>
+            <field name="action" ref="act_place_by_region"/>
+        </record>
+
+        <record model="ir.model.access" id="access_place">
+            <field name="model" search="[('model', '=', 'census.place')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_place_admin">
+            <field name="model" search="[('model', '=', 'census.region')]"/>
+            <field name="group" ref="res.group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+    </data>
+</tryton>
+
+
