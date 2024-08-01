@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+
+<tryton>
+    <data>
+
+        <record model="ir.ui.view" id="tax_jurisdiction_view_form">
+            <field name="model">account.tax.jurisdiction</field>
+            <field name="type">form</field>
+            <field name="name">tax_jurisdiction_form</field>
+        </record>
+        <record model="ir.ui.view" id="tax_jurisdiction_view_tree">
+            <field name="model">account.tax.jurisdiction</field>
+            <field name="type">tree</field>
+            <field name="name">tax_jurisdiction_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_tax_jurisdiction_form">
+            <field name="name">Jurisdictions</field>
+            <field name="res_model">account.tax.jurisdiction</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_tax_jurisdiction_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="tax_jurisdiction_view_tree"/>
+            <field name="act_window" ref="act_tax_jurisdiction_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_tax_jurisdiction_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="tax_jurisdiction_view_form"/>
+            <field name="act_window" ref="act_tax_jurisdiction_form"/>
+        </record>
+        <menuitem
+            parent="account.menu_taxes"
+            action="act_tax_jurisdiction_form"
+            sequence="50"
+            id="menu_tax_jurisdiction_form"/>
+
+        <record model="ir.model.access" id="access_tax_jurisdiction">
+            <field name="model" search="[('model', '=', 'account.tax.jurisdiction')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_tax_jurisdiction_account_admin">
+            <field name="model" search="[('model', '=', 'account.tax.jurisdiction')]"/>
+            <field name="group" ref="account.group_account_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <record model="ir.ui.view" id="tax_view_form">
+            <field name="model">account.tax</field>
+            <field name="inherit" ref="account.tax_view_form"/>
+            <field name="name">tax_form</field>
+        </record>
+
+    </data>
+</tryton>

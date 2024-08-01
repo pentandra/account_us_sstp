@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<form col="6">
+    <label name="code"/>
+    <field name="code"/>
+    <label name="name"/>
+    <field name="name"/>
+    <label name="active"/>
+    <field name="active"/>
+
+    <label name="type"/>
+    <field name="type"/>
+    <label name="place"/>
+    <field name="place"/>
+    <label name="authority"/>
+    <field name="authority"/>
+
+    <field name="taxes" colspan="6"/>
+</form>
