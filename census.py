@@ -1,6 +1,6 @@
 from trytond.model import DeactivableMixin, ModelSQL, ModelView, fields, tree
 from trytond.pyson import Eval
-from trytond.tools import lstrip_wildcard
+from trytond.tools import is_full_text, lstrip_wildcard
 
 class Region(tree(), ModelSQL, ModelView):
     "Region"
@@ -95,3 +95,24 @@ class Place(tree(), DeactivableMixin, ModelSQL, ModelView):
                 5: 'place',
                 }
         return levels.get(len(self.code_fips), 'unknown')
+
+    def get_rec_name(self, name):
+        if self.code_fips:
+            return '%s (%s)' % (self.name, self.code_fips)
+        else:
+            return self.name
+
+    @classmethod
+    def search_rec_name(cls, name, clause):
+        _, operator, operand, *extra = clause
+        if operator.startswith('!') or operator.startswith('not '):
+            bool_op = 'AND'
+        else:
+            bool_op = 'OR'
+        code_value = operand
+        if operator.endswith('like') and is_full_text(operand):
+            code_value = lstrip_wildcard(operand)
+        return [bool_op,
+            ('code_fips', operator, code_value, *extra),
+            ('name', operator, operand, *extra),
+            ]
