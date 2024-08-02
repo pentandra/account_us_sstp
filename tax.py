@@ -56,7 +56,7 @@ class Jurisdiction(DeactivableMixin, ModelSQL, ModelView):
     name = fields.Char("Name")
     authority = fields.Many2One('census.place', "Authority",
         domain=[('parent', '=', None)],
-        help="The jurisdiction in charge of this tax jurisdiction")
+        help="The entity in charge of this tax jurisdiction")
     place = fields.Many2One(
         'census.place', "Place",
         domain=[
