@@ -14,6 +14,22 @@
             <field name="name">class_code_list</field>
         </record>
 
+        <record model="ir.model.access" id="access_census_class_code">
+            <field name="model">census.class_code</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" depends="res" id="access_census_class_code_admin">
+            <field name="model">census.class_code</field>
+            <field name="group" ref="res.group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
         <record model="ir.ui.view" id="census_region_view_form">
             <field name="model">census.region</field>
             <field name="type">form</field>
@@ -76,14 +92,14 @@
             id="menu_census_region_form"/>
 
         <record model="ir.model.access" id="access_census_region">
-            <field name="model" search="[('model', '=', 'census.region')]"/>
+            <field name="model">census.region</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
             <field name="perm_delete" eval="False"/>
         </record>
-        <record model="ir.model.access" id="access_census_region_admin">
-            <field name="model" search="[('model', '=', 'census.region')]"/>
+        <record model="ir.model.access" depends="res" id="access_census_region_admin">
+            <field name="model">census.region</field>
             <field name="group" ref="res.group_admin"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
@@ -138,14 +154,14 @@
         </record>
 
         <record model="ir.model.access" id="access_place">
-            <field name="model" search="[('model', '=', 'census.place')]"/>
+            <field name="model">census.place</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
             <field name="perm_delete" eval="False"/>
         </record>
-        <record model="ir.model.access" id="access_place_admin">
-            <field name="model" search="[('model', '=', 'census.region')]"/>
+        <record model="ir.model.access" depends="res" id="access_place_admin">
+            <field name="model">census.place</field>
             <field name="group" ref="res.group_admin"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
