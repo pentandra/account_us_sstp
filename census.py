@@ -41,7 +41,6 @@ class Region(tree(), ModelSQL, ModelView):
 class ClassCode(DeactivableMixin, ModelSQL, ModelView):
     "Class Code"
     __name__ = 'census.class_code'
-    _rec_name = 'code'
     code = fields.Char("Code", size=2, required=True)
     description = fields.Char("Description", required=True)
 
@@ -49,6 +48,9 @@ class ClassCode(DeactivableMixin, ModelSQL, ModelView):
     def __setup__(cls):
         super().__setup__()
         cls._order.insert(0, ('code', 'ASC'))
+
+    def get_rec_name(self, name):
+        return '[%s] %s' % (self.code, self.description)
 
 class Place(tree(), DeactivableMixin, ModelSQL, ModelView):
     "Place"

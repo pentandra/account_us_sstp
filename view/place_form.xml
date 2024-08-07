@@ -13,14 +13,16 @@
     <field name="country"/>
     <label name="subdivision"/>
     <field name="subdivision"/>
+
     <label name="code_gnis"/>
     <field name="code_gnis"/>
     <label name="code_fips"/>
     <field name="code_fips"/>
     <label name="level"/>
     <field name="level"/>
+
     <label name="class_code"/>
-    <field name="class_code"/>
+    <field name="class_code" colspan="5"/>
 
     <field name="children" colspan="6"/>
 </form>
