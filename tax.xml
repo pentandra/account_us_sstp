@@ -43,9 +43,9 @@
         </record>
 
         <record model="ir.ui.view" depends="account" id="tax_view_form">
-            <field name="model">account.tax</field>
-            <field name="inherit" ref="account.tax_view_form"/>
-            <field name="name">tax_form</field>
+            <field name="model">account.tax.template</field>
+            <field name="inherit" ref="account.tax_template_view_form"/>
+            <field name="name">tax_template_form</field>
         </record>
 
     </data>

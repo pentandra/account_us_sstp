@@ -65,7 +65,7 @@ class Jurisdiction(DeactivableMixin, ModelSQL, ModelView):
         help="The place associated with the jurisdiction.")
     type = fields.Selection(JURISDICTION_TYPES, "Type")
     taxes = fields.One2Many(
-            'account.tax', 'jurisdiction', "Taxes", readonly=True)
+            'account.tax.template', 'jurisdiction', "Taxes", readonly=True)
     
     @fields.depends('code', 'name', 'place', 'authority')
     def on_change_place(self):
@@ -82,7 +82,7 @@ class Jurisdiction(DeactivableMixin, ModelSQL, ModelView):
                 self.authority = authority
 
 
-class Tax(metaclass=PoolMeta):
-    __name__ = 'account.tax'
+class TaxTemplate(metaclass=PoolMeta):
+    __name__ = 'account.tax.template'
     jurisdiction = fields.Many2One(
             'account.tax.jurisdiction', "Jurisdiction", ondelete='CASCADE')
