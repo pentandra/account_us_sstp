@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<!-- -->
+
+<tryton>
+    <data>
+        <record model="account.tax.group" id="group_00">
+            <field name="code">00</field>
+            <field name="name">County</field>
+        </record>
+        <record model="account.tax.group" id="group_01">
+            <field name="code">01</field>
+            <field name="name">City</field>
+        </record>
+        <record model="account.tax.group" id="group_02">
+            <field name="code">02</field>
+            <field name="name">Town</field>
+        </record>
+        <record model="account.tax.group" id="group_03">
+            <field name="code">03</field>
+            <field name="name">Village</field>
+        </record>
+        <record model="account.tax.group" id="group_04">
+            <field name="code">04</field>
+            <field name="name">Borough</field>
+        </record>
+        <record model="account.tax.group" id="group_05">
+            <field name="code">05</field>
+            <field name="name">Township</field>
+        </record>
+        <record model="account.tax.group" id="group_09">
+            <field name="code">09</field>
+            <field name="name">Other Municipality</field>
+        </record>
+        <record model="account.tax.group" id="group_10">
+            <field name="code">10</field>
+            <field name="name">School District</field>
+        </record>
+        <record model="account.tax.group" id="group_11">
+            <field name="code">11</field>
+            <field name="name">Junior Colleges</field>
+        </record>
+        <record model="account.tax.group" id="group_19">
+            <field name="code">19</field>
+            <field name="name">Other Schools</field>
+        </record>
+        <record model="account.tax.group" id="group_20">
+            <field name="code">20</field>
+            <field name="name">Water Control</field>
+        </record>
+        <record model="account.tax.group" id="group_21">
+            <field name="code">21</field>
+            <field name="name">Utility District</field>
+        </record>
+        <record model="account.tax.group" id="group_22">
+            <field name="code">22</field>
+            <field name="name">Sanitation</field>
+        </record>
+        <record model="account.tax.group" id="group_23">
+            <field name="code">23</field>
+            <field name="name">Water or Sewer District</field>
+        </record>
+        <record model="account.tax.group" id="group_24">
+            <field name="code">24</field>
+            <field name="name">Reclamation District</field>
+        </record>
+        <record model="account.tax.group" id="group_25">
+            <field name="code">25</field>
+            <field name="name">Fire or Police</field>
+        </record>
+        <record model="account.tax.group" id="group_26">
+            <field name="code">26</field>
+            <field name="name">Roads or Bridges</field>
+        </record>
+        <record model="account.tax.group" id="group_27">
+            <field name="code">27</field>
+            <field name="name">Hospitals</field>
+        </record>
+        <record model="account.tax.group" id="group_29">
+            <field name="code">29</field>
+            <field name="name">Other Municipal Services</field>
+        </record>
+        <record model="account.tax.group" id="group_40">
+            <field name="code">40</field>
+            <field name="name">Township and County</field>
+        </record>
+        <record model="account.tax.group" id="group_41">
+            <field name="code">41</field>
+            <field name="name">City and School</field>
+        </record>
+        <record model="account.tax.group" id="group_42">
+            <field name="code">42</field>
+            <field name="name">County collected by Other Taxing Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_43">
+            <field name="code">43</field>
+            <field name="name">State and County</field>
+        </record>
+        <record model="account.tax.group" id="group_44">
+            <field name="code">44</field>
+            <field name="name">Central Collection Taxing Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_45">
+            <field name="code">45</field>
+            <field name="name">State Taxing Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_49">
+            <field name="code">49</field>
+            <field name="name">Other Combination Collection</field>
+        </record>
+        <record model="account.tax.group" id="group_50">
+            <field name="code">50</field>
+            <field name="name">Bond Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_51">
+            <field name="code">51</field>
+            <field name="name">Annual County Bond Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_52">
+            <field name="code">52</field>
+            <field name="name">Semi-annual County Bond Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_53">
+            <field name="code">53</field>
+            <field name="name">Annual City Bond Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_54">
+            <field name="code">54</field>
+            <field name="name">Semi-annual City Bond Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_59">
+            <field name="code">59</field>
+            <field name="name">Other Bond Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_61">
+            <field name="code">61</field>
+            <field name="name">Assessment District</field>
+        </record>
+        <record model="account.tax.group" id="group_62">
+            <field name="code">62</field>
+            <field name="name">Homeowner’s Association</field>
+        </record>
+        <record model="account.tax.group" id="group_63">
+            <field name="code">63</field>
+            <field name="name">Special District</field>
+        </record>
+        <record model="account.tax.group" id="group_69">
+            <field name="code">69</field>
+            <field name="name">Other Special Districts</field>
+        </record>
+        <record model="account.tax.group" id="group_70">
+            <field name="code">70</field>
+            <field name="name">Central Appraisal Taxing Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_71">
+            <field name="code">71</field>
+            <field name="name">Unsecured County Taxes</field>
+        </record>
+        <record model="account.tax.group" id="group_72">
+            <field name="code">72</field>
+            <field name="name">Mobile Home Authority</field>
+        </record>
+        <record model="account.tax.group" id="group_79">
+            <field name="code">79</field>
+            <field name="name">Other Special Applications</field>
+        </record>
+
+    </data>
+</tryton>

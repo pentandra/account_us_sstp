@@ -15,7 +15,6 @@ def register():
         census.ClassCode,
         census.Place,
         census.Region,
-        tax.Jurisdiction,
         tax.Tax,
         module='account_us_sstp', type_='model')
     Pool.register(
