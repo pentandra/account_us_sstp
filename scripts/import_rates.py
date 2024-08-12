@@ -55,14 +55,6 @@ def _progress(iterable):
         pbar = iter
     return pbar(iterable)
 
-
-def clean(code):
-    sys.stderr.write('Cleaning')
-    PostalCode = Model.get('country.postal_code')
-    PostalCode._proxy.delete(
-        [c.id for c in PostalCode.find([('country.code', '=', code)])], {})
-    print('.', file=sys.stderr)
-
 def _remove_forbidden_chars(name):
     from trytond.tools import remove_forbidden_chars
     return remove_forbidden_chars(name)
@@ -127,7 +119,6 @@ def get_tax_account(company=None):
         ], limit=1)
 
 def update_taxes(code, taxes):
-    TaxRule = Model.get('account.tax.rule')
     Tax = Model.get('account.tax')
     print('Importing', file=sys.stderr)
 
@@ -150,6 +141,8 @@ def update_taxes(code, taxes):
             name = '%s %s' % (code_fips, type_)
             description = '%s tax (%s)' % (code_fips
                     if jurisdiction is None else jurisdiction.name, row[type_])
+            sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
+            rate_type = 'general' if 'general' in type_ else 'food'
 
             if current_code_fips != code_fips:
                 if (name, None) in taxes:
@@ -162,6 +155,8 @@ def update_taxes(code, taxes):
                 parent.authority = authority
                 parent.type = 'none'
                 parent.group = groups[row['jurisdiction_type']]
+                parent.sourcing = sourcing
+                parent.rate_type = rate_type
                 records.append(parent)
 
 
@@ -176,6 +171,8 @@ def update_taxes(code, taxes):
             record.type = 'percentage'
             record.group = groups[row['jurisdiction_type']]
             record.rate = Decimal(row[type_])
+            record.sourcing = sourcing
+            record.rate_type = rate_type
             record.start_date = start_date
             record.end_date = None if end_date == dt.date.max else end_date
 
