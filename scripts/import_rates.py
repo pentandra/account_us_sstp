@@ -141,6 +141,7 @@ def update_taxes(code, taxes):
             name = '%s %s' % (code_fips, type_)
             description = '%s tax (%s)' % (code_fips
                     if jurisdiction is None else jurisdiction.name, row[type_])
+            sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
             rate_type = 'general' if 'general' in type_ else 'food'
 
             if current_code_fips != code_fips:
@@ -154,7 +155,7 @@ def update_taxes(code, taxes):
                 parent.authority = authority
                 parent.type = 'none'
                 parent.group = groups[row['jurisdiction_type']]
-                parent.sourcing = None
+                parent.sourcing = sourcing
                 parent.rate_type = rate_type
                 records.append(parent)
 
@@ -170,7 +171,7 @@ def update_taxes(code, taxes):
             record.type = 'percentage'
             record.group = groups[row['jurisdiction_type']]
             record.rate = Decimal(row[type_])
-            record.sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
+            record.sourcing = sourcing
             record.rate_type = rate_type
             record.start_date = start_date
             record.end_date = None if end_date == dt.date.max else end_date
