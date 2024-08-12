@@ -16,6 +16,8 @@ def register():
         census.Place,
         census.Region,
         tax.Tax,
+        tax.TaxBoundary,
+        tax.TaxRule,
         module='account_us_sstp', type_='model')
     Pool.register(
         module='account_us_sstp', type_='wizard')
