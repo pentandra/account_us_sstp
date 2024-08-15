@@ -33,6 +33,16 @@ class Tax(metaclass=PoolMeta):
         ], "Rate Type", sort=False, states={
             'readonly': _states['readonly'],
             })
+    del _states
+
+    @classmethod
+    def copy(cls, taxes, default=None):
+        if default is None:
+            default = {}
+        else:
+            default = default.copy()
+        default.setdefault('authority', None)
+        return super().copy(taxes, default=default)
 
 class TaxBoundary(ModelView, ModelSQL, MatchMixin):
     "Tax Boundary"
@@ -70,4 +80,13 @@ class TaxRule(metaclass=PoolMeta):
             help="The entity that administers this tax")
     jurisdiction = fields.Many2One('census.place', "Jurisdiction",
         help="The tax jurisdiction represented by this rule")
+
+    @classmethod
+    def copy(cls, rules, default=None):
+        if default is None:
+            default = {}
+        else:
+            default = default.copy()
+        default.setdefault('authority', None)
+        return super().copy(rules, default=default)
 
