@@ -25,5 +25,16 @@
             <field name="name">tax_rule_tree</field>
         </record>
 
+        <record model="ir.ui.view" depends="account" id="tax_code_view_tree">
+            <field name="model">account.tax.code</field>
+            <field name="inherit" ref="account.tax_code_view_tree"/>
+            <field name="name">tax_code_tree</field>
+        </record>
+        <record model="ir.ui.view" depends="account" id="tax_code_view_list">
+            <field name="model">account.tax.code</field>
+            <field name="inherit" ref="account.tax_code_view_list"/>
+            <field name="name">tax_code_list</field>
+        </record>
+
     </data>
 </tryton>

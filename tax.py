@@ -55,6 +55,13 @@ class TaxBoundary(ModelView, ModelSQL, MatchMixin):
             domain=[('authority', '=', Eval('authority', -1))],
             ondelete='RESTRICT')
 
+class TaxCode(metaclass=PoolMeta):
+    "Tax Code"
+    __name__ = 'account.tax.code'
+    authority = fields.Many2One('census.place', "Authority",
+            domain=[('parent', '=', None)],
+            help="The entity that administers this tax code")
+
 class TaxRule(metaclass=PoolMeta):
     __name__ = 'account.tax.rule'
 
