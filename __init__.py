@@ -8,8 +8,7 @@ __all__ = ['register']
 
 def register():
     # Prevent import of backend when importing scripts
-    from . import census
-    from . import tax
+    from . import account, census, sale, tax
 
     Pool.register(
         census.ClassCode,
@@ -20,6 +19,13 @@ def register():
         tax.TaxCode,
         tax.TaxRule,
         module='account_us_sstp', type_='model')
+    Pool.register(
+        account.InvoiceLine,
+        module='account_us_sstp', type_='model',
+        depends=['account_invoice'])
+    Pool.register(
+        sale.SaleLine,
+        module='account_us_sstp', type_='model', depends=['sale'])
     Pool.register(
         module='account_us_sstp', type_='wizard')
     Pool.register(
