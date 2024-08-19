@@ -1,0 +1,175 @@
+<?xml version='1.0' encoding='utf-8'?>
+<tryton>
+    <data depends="account_us">
+
+        <record model="account.account.template" id="2230_AR">
+            <field name="name">Sales tax collected—Arkansas</field>
+            <field name="code">2230-AR</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_GA">
+            <field name="name">Sales tax collected—Georgia</field>
+            <field name="code">2230-GA</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_IA">
+            <field name="name">Sales tax collected—Iowa</field>
+            <field name="code">2230-IA</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_IN">
+            <field name="name">Sales tax collected—Indiana</field>
+            <field name="code">2230-IN</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_KS">
+            <field name="name">Sales tax collected—Kansas</field>
+            <field name="code">2230-KS</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_KY">
+            <field name="name">Sales tax collected—Kentucky</field>
+            <field name="code">2230-KY</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_MI">
+            <field name="name">Sales tax collected—Michigan</field>
+            <field name="code">2230-MI</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_MN">
+            <field name="name">Sales tax collected—Minnesota</field>
+            <field name="code">2230-MN</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_NC">
+            <field name="name">Sales tax collected—North Carolina</field>
+            <field name="code">2230-NC</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_ND">
+            <field name="name">Sales tax collected—North Dakota</field>
+            <field name="code">2230-ND</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_NE">
+            <field name="name">Sales tax collected—Nebraska</field>
+            <field name="code">2230-NE</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_NJ">
+            <field name="name">Sales tax collected—New Jersey</field>
+            <field name="code">2230-NJ</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_NV">
+            <field name="name">Sales tax collected—Nevada</field>
+            <field name="code">2230-NV</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_OH">
+            <field name="name">Sales tax collected—Ohio</field>
+            <field name="code">2230-OH</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_OK">
+            <field name="name">Sales tax collected—Oklahoma</field>
+            <field name="code">2230-OK</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_RI">
+            <field name="name">Sales tax collected—Rhode Island</field>
+            <field name="code">2230-RI</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_SD">
+            <field name="name">Sales tax collected—South Dakota</field>
+            <field name="code">2230-SD</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_TN">
+            <field name="name">Sales tax collected—Tennessee</field>
+            <field name="code">2230-TN</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_UT">
+            <field name="name">Sales tax collected—Utah</field>
+            <field name="code">2230-UT</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_VT">
+            <field name="name">Sales tax collected—Vermont</field>
+            <field name="code">2230-VT</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_WA">
+            <field name="name">Sales tax collected—Washington</field>
+            <field name="code">2230-WA</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_WI">
+            <field name="name">Sales tax collected—Wisconsin</field>
+            <field name="code">2230-WI</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_WV">
+            <field name="name">Sales tax collected—West Virginia</field>
+            <field name="code">2230-WV</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+        <record model="account.account.template" id="2230_WY">
+            <field name="name">Sales tax collected—Wyoming</field>
+            <field name="code">2230-WY</field>
+            <field name="type" ref="account_us.tax_liabilities"/>
+            <field name="party_required" eval="True"/>
+            <field name="parent" ref="account_us.2230"/>
+        </record>
+
+    </data>
+</tryton>

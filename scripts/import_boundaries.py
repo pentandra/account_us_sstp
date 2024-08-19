@@ -1,47 +1,29 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This file is part of Tryton.  The COPYRIGHT file at the top level of
 # this repository contains the full copyright notices and license terms.
-from __future__ import print_function
 
 import csv
 from collections import defaultdict
-import datetime as dt
+from datetime import date
 import os
 import sys
 
-try:
-    from urllib.error import HTTPError
-    from urllib.request import urlopen
-    from urllib.parse import urljoin
-except ImportError:
-    from urllib2 import urlopen, HTTPError
-
-from html.parser import HTMLParser
-import zipfile
 from argparse import ArgumentParser
 from io import BytesIO, TextIOWrapper
 from itertools import batched
+from proteus import Model, config
 
-try:
-    from progressbar import ETA, Bar, ProgressBar, SimpleProgress
-except ImportError:
-    ProgressBar = None
-
-try:
-    from proteus import Model, config
-except ImportError:
-    prog = os.path.basename(sys.argv[0])
-    sys.exit("proteus must be installed to use %s" % prog)
+from common import fetch, get_places, _progress
 
 
 def clean_boundaries(code):
     sys.stderr.write('Cleaning boundaries')
     sys.stderr.flush()
     Boundary = Model.get('account.tax.boundary')
-    Boundary._proxy.delete(
-        [c.id for c in Boundary.find([
-            ('authority.subdivision.code', '=', code),
-            ])], {})
+    Boundary._proxy.delete([], {})
+        #[c.id for c in Boundary.find([
+        #    ('authority.subdivision.code', '=', code),
+        #    ])], {})
     print('.', file=sys.stderr)
 
 def clean_tax_rules(code):
@@ -61,70 +43,6 @@ def clean_tax_codes(code):
     TaxCode._proxy.delete(
         [c.id for c in TaxCode.find([('authority.subdivision.code', '=', code)])], {})
     print('.', file=sys.stderr)
-
-class LinksExtractor(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.links = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'a':
-            for attr in attrs:
-                if attr[0] == 'href':
-                    self.links.append(attr[1])
-
-    def get_links(self):
-        return self.links
-
-def _progress(iterable):
-    if ProgressBar:
-        widgets = [
-                SimpleProgress(),
-                Bar(),
-                ETA()]
-        pbar = ProgressBar(widgets=widgets)
-    else:
-        pbar = iter
-    return pbar(iterable)
-
-def _remove_forbidden_chars(name):
-    from trytond.tools import remove_forbidden_chars
-    return remove_forbidden_chars(name)
-
-def fetch(code):
-    sys.stderr.write('Fetching')
-    sys.stderr.flush()
-    base = 'https://www.streamlinedsalestax.org/ratesandboundry/Boundary/'
-    try:
-        responce = urlopen(base)
-    except HTTPError as e:
-        sys.exit("\nError fetching directory listing: %s" % e.reason)
-    parser = LinksExtractor()
-    parser.feed(TextIOWrapper(responce, encoding='utf-8').read())
-    parser.close()
-
-    files = {os.path.basename(a)[:2]: urljoin(base, a) for a in parser.get_links()}
-
-    try:
-        responce = urlopen(files[code])
-    except KeyError:
-        sys.exit("\nFile not found for code: %s" % code)
-    except HTTPError as e:
-        sys.exit("\nError downloading %s: %s" % (code, e.reason))
-    data = responce.read()
-
-    root, ext = os.path.splitext(responce.url)
-    if ext == '.zip':
-        with zipfile.ZipFile(BytesIO(data)) as zf:
-            data = zf.read(os.path.basename(root) + '.csv')
-    print('.', file=sys.stderr)
-    return data
-
-def get_places(code):
-    Place = Model.get('census.place')
-    return {p.code_fips: p for p in Place.find([
-        ('subdivision.code', '=', code)
-        ])}
 
 class TaxRuleCollector:
 
@@ -357,9 +275,9 @@ def import_(code, boundaries):
     records = []
     for row in _progress(reader):
         authority = places[row['fips_state_code']]
-        start_date = dt.datetime.strptime(row['start_date'], '%Y%m%d').date()
-        end_date = dt.datetime.strptime(row['end_date'], '%Y%m%d').date()
-        end_date = None if end_date == dt.date.max else end_date
+        start_date = date.fromisoformat(row['start_date'])
+        end_date = date.fromisoformat(row['end_date'])
+        end_date = None if end_date == date.max else end_date
 
         tax_code = code_collector.collect(row)
         rule = rule_collector.collect(row)
@@ -419,6 +337,8 @@ _fieldnames = ['record_type', 'start_date', 'end_date',
     'composite_ser_code', 'fips_state_code', 'fips_state_indicator','fips_county_code',
     'fips_place_code', 'fips_place_class_code', 'longitude', 'latitude']
 
+BASE_URL = 'https://www.streamlinedsalestax.org/ratesandboundry/Boundary/'
+
 def main(database, codes, config_file=None):
     config.set_trytond(database, config_file=config_file)
     do_import(codes)
@@ -431,7 +351,7 @@ def do_import(codes):
         clean_boundaries('US-%s' % code)
         clean_tax_rules('US-%s' % code)
         clean_tax_codes('US-%s' % code)
-        import_('US-%s' % code, fetch(code))
+        import_('US-%s' % code, fetch(code, BASE_URL))
 
 
 def run():
