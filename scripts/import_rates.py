@@ -45,13 +45,16 @@ def get_tax_account(name, company=None):
         ], limit=1)
 
 def update_taxes(code, stream, from_date, account):
-    print('Importing', file=sys.stderr)
+    print('Importing taxes active as of %s' % from_date.isoformat(), file=sys.stderr)
     Tax = Model.get('account.tax')
 
     places = get_places(code)
     taxes = get_taxes(code)
     groups = get_groups()
     tax_account, = get_tax_account(account)
+
+    today = date.today()
+    far_future = today.replace(year=today.year + 100)
 
     f = TextIOWrapper(BytesIO(stream), encoding='utf-8-sig')
     records = []
@@ -103,7 +106,7 @@ def update_taxes(code, stream, from_date, account):
                              sourcing = sourcing,
                              rate_type = rate_type,
                              start_date = start_date,
-                             end_date = None if end_date == date.max else end_date,
+                             end_date = None if end_date > far_future else end_date,
                              invoice_account = tax_account,
                              credit_note_account = tax_account)
 
