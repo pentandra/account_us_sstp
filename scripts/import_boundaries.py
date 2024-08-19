@@ -238,7 +238,7 @@ class TaxCodeCollector:
             tax_code.save()
         return tax_code
 
-def import_(code, boundaries):
+def import_(code, boundaries, from_date):
     sys.stderr.write('Importing')
     sys.stderr.flush()
     Boundary = Model.get('account.tax.boundary')
@@ -301,6 +301,13 @@ def import_(code, boundaries):
             total_tax.save()
 
 
+        if reader.line_num % 10000 == 0:
+            Boundary.save(records)
+            records = []
+
+        if end_date and end_date <= from_date:
+            continue
+
         records.append(Boundary(
                     type=row['record_type'],
                     start_date=start_date,
@@ -313,10 +320,6 @@ def import_(code, boundaries):
                     rule=rule,
                     code=tax_code,
                     ))
-
-        if reader.line_num % 10000 == 0:
-            Boundary.save(records)
-            records = []
 
     Boundary.save(records)
 
@@ -337,21 +340,23 @@ _fieldnames = ['record_type', 'start_date', 'end_date',
     'composite_ser_code', 'fips_state_code', 'fips_state_indicator','fips_county_code',
     'fips_place_code', 'fips_place_class_code', 'longitude', 'latitude']
 
-BASE_URL = 'https://www.streamlinedsalestax.org/ratesandboundry/Boundary/'
+_base = 'https://www.streamlinedsalestax.org/ratesandboundry/Boundary/'
 
-def main(database, codes, config_file=None):
+def main(database, args, config_file=None):
     config.set_trytond(database, config_file=config_file)
-    do_import(codes)
+    do_import(args)
 
 
-def do_import(codes):
-    for code in codes:
+def do_import(args):
+    for code in args.codes:
         print(code, file=sys.stderr)
-        code = code.upper()
-        clean_boundaries('US-%s' % code)
-        clean_tax_rules('US-%s' % code)
-        clean_tax_codes('US-%s' % code)
-        import_('US-%s' % code, fetch(code, BASE_URL))
+        tryton_code = 'US-%s' % code.upper()
+        from_date = date.min if args.all else args.from_date
+
+        clean_boundaries(tryton_code)
+        clean_tax_rules(tryton_code)
+        clean_tax_codes(tryton_code)
+        import_(tryton_code, fetch(code.upper(), _base), from_date)
 
 
 def run():
@@ -359,10 +364,16 @@ def run():
     parser.add_argument('-d', '--database', dest='database', required=True)
     parser.add_argument('-c', '--config', dest='config_file',
         help='the trytond config file')
+    parser.add_argument('-f', '--from', dest='from_date',
+        default=date.today().isoformat(), type=date.fromisoformat,
+        help='import all boundary records active from the given date YYYY-MM-DD '
+             '(defaults to %s)' % date.today().isoformat())
+    parser.add_argument('--all', action='store_true',
+        help='import all available boundary records (overrides --from)')
     parser.add_argument('codes', nargs='+')
 
     args = parser.parse_args()
-    main(args.database, args.codes, args.config_file)
+    main(args.database, args, args.config_file)
 
 
 if __name__ == '__main__':
