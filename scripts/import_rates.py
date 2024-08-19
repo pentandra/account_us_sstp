@@ -53,7 +53,7 @@ def update_taxes(code, stream, from_date, account):
     groups = get_groups()
     tax_account, = get_tax_account(account)
 
-    f = TextIOWrapper(BytesIO(stream), encoding='utf-8')
+    f = TextIOWrapper(BytesIO(stream), encoding='utf-8-sig')
     records = []
     current_code_fips = None
     for row in _progress(list(csv.DictReader(f, fieldnames=_fieldnames))):
