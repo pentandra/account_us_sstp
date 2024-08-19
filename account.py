@@ -8,7 +8,7 @@ class InvoiceLine(metaclass=PoolMeta):
     __name__ = 'account.invoice.line'
 
     @fields.depends(
-            '_parent_invoice.party', 'party', 'invoice', 'tax_date',
+            '_parent_invoice.party', 'party', 'invoice',
             '_parent_invoice.accounting_date', '_parent_invoice.invoice_date',
             '_parent_invoice.invoice_address') 
     def on_change_product(self):
@@ -16,12 +16,12 @@ class InvoiceLine(metaclass=PoolMeta):
         Date = pool.get('ir.date')
         Boundary = pool.get('account.tax.boundary')
 
-        if self.invoice and self.invoice.tax_date:
-            tax_date = self.invoice.tax_date
-        elif self.tax_date:
+        if self.tax_date:
             tax_date = self.tax_date
-        elif self.taxes_date:
-            tax_date = self.taxes_date
+        elif self.invoice and self.invoice.tax_date:
+            tax_date = self.invoice.tax_date
+        else:
+            tax_date = Date.today()
 
         if self.invoice and self.invoice.invoice_address:
             a = self.invoice.invoice_address
@@ -67,3 +67,61 @@ class InvoiceLine(metaclass=PoolMeta):
                         party.customer_tax_rule = boundary.rule
 
         return super().on_change_product()
+
+class InvoiceTax(metaclass=PoolMeta):
+    __name__ = 'account.invoice.tax'
+
+    def get_move_lines(self):
+        lines = super().get_move_lines()
+
+        pool = Pool()
+        Date = pool.get('ir.date')
+        Boundary = pool.get('account.tax.boundary')
+
+        if self.invoice and self.invoice.tax_date:
+            tax_date = self.invoice.tax_date
+        else:
+            tax_date = Date.today()
+
+        if self.invoice and self.invoice.invoice_address:
+            a = self.invoice.invoice_address
+
+            pattern = r'(\d{5})-?(\d{4})?$'
+            match = re.match(pattern, a.postal_code)
+            if match:
+                zipcode, zipext = match.groups()
+
+                try:
+                    boundary, = Boundary.search([
+                        ('start_date', '<=', tax_date),
+                        ['OR', [
+                            ('end_date', '>=', tax_date)
+                            ], [
+                            ('end_date', '=', None)
+                            ],
+                         ],
+                        ('authority.country', '=', a.country),
+                        ('authority.subdivision', '=', a.subdivision),
+                        ['OR', [
+                            ('type', '=', '4'),
+                            ('zipcode_low', '<=', zipcode),
+                            ('zipcode_high', '>=', zipcode),
+                            ('zipext_low', '<=', zipext),
+                            ('zipext_high', '>=', zipext),
+                            ], [
+                            ('type', '=', 'Z'),
+                            ('zipcode_low', '<=', zipcode),
+                            ('zipcode_high', '>=', zipcode),
+                            ],
+                         ]
+                        ], limit=1, order=[('type', 'DESC')])
+                except ValueError:
+                    boundary = None
+
+                if boundary and boundary.code:
+                    for line in lines:
+                        for tax_line in line.tax_lines:
+                            if tax_line.type == 'tax':
+                                tax_line.code = boundary.code.code
+
+        return lines

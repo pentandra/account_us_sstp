@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<data>
+    <xpath expr="/tree/field[@name='type']" position="after">
+        <field name="code" optional="1"/>
+    </xpath>
+</data>

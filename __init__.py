@@ -17,10 +17,13 @@ def register():
         tax.Tax,
         tax.TaxBoundary,
         tax.TaxCode,
+        tax.TaxCodeLine,
+        tax.TaxLine,
         tax.TaxRule,
         module='account_us_sstp', type_='model')
     Pool.register(
         account.InvoiceLine,
+        account.InvoiceTax,
         module='account_us_sstp', type_='model',
         depends=['account_invoice'])
     Pool.register(

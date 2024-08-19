@@ -48,11 +48,9 @@ class SaleLine(metaclass=PoolMeta):
                          ]
                         ], limit=1, order=[('type', 'DESC')])
                 except ValueError:
-                    print("Could not find a matching tax rule for %s" % party)
                     boundary = None
 
                 if boundary and boundary.rule:
-                    print('using boundary rule %s' % boundary.rule.rec_name)
                     if party and not party.customer_tax_rule:
                         party.customer_tax_rule = boundary.rule
 
