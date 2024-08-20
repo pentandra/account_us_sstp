@@ -79,14 +79,15 @@ def update_taxes(code, stream, from_date, account):
                 if (name, None) in taxes:
                     parent = taxes[(name, None)]
                 else:
-                    parent = Tax(name=name,
-                                 jurisdiction=jurisdiction,
-                                 description = description,
-                                 authority = authority,
-                                 type = 'none',
-                                 group = group,
-                                 sourcing = sourcing,
-                                 rate_type = rate_type)
+                    parent = Tax(name=name)
+
+                parent.jurisdiction = jurisdiction
+                parent.description = description
+                parent.authority = authority
+                parent.type = 'none'
+                parent.group = group
+                parent.sourcing = sourcing
+                parent.rate_type = rate_type
 
                 records.append(parent)
 
@@ -96,19 +97,20 @@ def update_taxes(code, stream, from_date, account):
             if (name, start_date) in taxes:
                 record = taxes[(name, start_date)]
             else:
-                record = Tax(name=name,
-                             jurisdiction=jurisdiction,
-                             description = description,
-                             authority = authority,
-                             type = 'percentage',
-                             group = group,
-                             rate = Decimal(row[type_]),
-                             sourcing = sourcing,
-                             rate_type = rate_type,
-                             start_date = start_date,
-                             end_date = None if end_date > far_future else end_date,
-                             invoice_account = tax_account,
-                             credit_note_account = tax_account)
+                record = Tax(name=name)
+
+             record.jurisdiction = jurisdiction.
+             record.description = description
+             record.authority = authority
+             record.type = 'percentage'
+             record.group = group
+             record.rate = Decimal(row[type_])
+             record.sourcing = sourcing
+             record.rate_type = rate_type
+             record.start_date = start_date
+             record.end_date = None if end_date > far_future else end_date
+             record.invoice_account = tax_account
+             record.credit_note_account = tax_account
 
             records.append(record)
         current_code_fips = code_fips
