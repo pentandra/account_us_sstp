@@ -18,6 +18,7 @@ def register():
         tax.TaxBoundary,
         tax.TaxCode,
         tax.TaxCodeLine,
+        tax.TaxCodeContext,
         tax.TaxLine,
         tax.TaxRule,
         module='account_us_sstp', type_='model')
