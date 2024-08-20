@@ -67,6 +67,16 @@ def update_taxes(code, stream, from_date, account):
         start_date = date.fromisoformat(row['start_date'])
         end_date = date.fromisoformat(row['end_date'])
 
+        sequence = None
+        if jurisdiction:
+            match jurisdiction.level:
+                case 'state':
+                    sequence = 0
+                case 'county':
+                    sequence = 1
+                case 'place':
+                    sequence = 2
+
         for type_ in ['general_rate_intrastate', 'general_rate_interstate',
             'food_rate_intrastate', 'food_rate_interstate']:
             name = '%s %s' % (code_fips, type_) #TODO: isn't there a better name?
@@ -88,6 +98,7 @@ def update_taxes(code, stream, from_date, account):
                 parent.group = group
                 parent.sourcing = sourcing
                 parent.rate_type = rate_type
+                parent.sequence = sequence
 
                 records.append(parent)
 
@@ -99,18 +110,19 @@ def update_taxes(code, stream, from_date, account):
             else:
                 record = Tax(name=name)
 
-             record.jurisdiction = jurisdiction.
-             record.description = description
-             record.authority = authority
-             record.type = 'percentage'
-             record.group = group
-             record.rate = Decimal(row[type_])
-             record.sourcing = sourcing
-             record.rate_type = rate_type
-             record.start_date = start_date
-             record.end_date = None if end_date > far_future else end_date
-             record.invoice_account = tax_account
-             record.credit_note_account = tax_account
+            record.jurisdiction = jurisdiction
+            record.description = description
+            record.authority = authority
+            record.type = 'percentage'
+            record.group = group
+            record.rate = Decimal(row[type_])
+            record.sourcing = sourcing
+            record.rate_type = rate_type
+            record.start_date = start_date
+            record.end_date = None if end_date > far_future else end_date
+            record.invoice_account = tax_account
+            record.credit_note_account = tax_account
+            record.sequence = sequence
 
             records.append(record)
         current_code_fips = code_fips
