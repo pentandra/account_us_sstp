@@ -5,87 +5,97 @@ this repository contains the full copyright notices and license terms. -->
     <data depends="account_us">
 
         <record model="account.tax.template" id="tax_uniform_state_general">
-            <field name="name">Uniform state tax on general goods or services</field>
-            <field name="description">Generic state tax (to be replaced by an actual state tax)</field>
+            <field name="name">Uniform state tax on general goods or services (to be replaced by an actual state tax)</field>
+            <field name="description">Generic state tax</field>
             <field name="group" ref="group_45"/>
             <field name="type">none</field>
             <field name="rate_type">general</field>
+            <field name="sequence">0</field>
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_state_food">
-            <field name="name">Uniform state tax on food</field>
-            <field name="description">Generic state tax (to be replaced by an actual state tax)</field>
+            <field name="name">Uniform state tax on food and drugs (to be replaced by an actual state tax)</field>
+            <field name="description">Generic state tax</field>
             <field name="group" ref="group_45"/>
             <field name="type">none</field>
             <field name="rate_type">food</field>
+            <field name="sequence">0</field>
             <field name="account" ref="account_us.root"/>
         </record>
 
         <record model="account.tax.template" id="tax_uniform_county_general">
-            <field name="name">Uniform county tax on general goods or services</field>
-            <field name="description">Generic county tax (to be replaced by an actual county tax)</field>
+            <field name="name">Uniform county tax on general goods or services (to be replaced by an actual county tax)</field>
+            <field name="description">Generic county tax</field>
             <field name="group" ref="group_00"/>
             <field name="type">none</field>
             <field name="rate_type">general</field>
+            <field name="sequence">1</field>
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_county_food">
-            <field name="name">Uniform county tax on food</field>
-            <field name="description">Generic county tax (to be replaced by an actual county tax)</field>
+            <field name="name">Uniform county tax on food and drugs (to be replaced by an actual county tax)</field>
+            <field name="description">Generic county tax</field>
             <field name="group" ref="group_00"/>
             <field name="type">none</field>
             <field name="rate_type">food</field>
+            <field name="sequence">1</field>
             <field name="account" ref="account_us.root"/>
         </record>
 
         <record model="account.tax.template" id="tax_uniform_city_general">
-            <field name="name">Uniform city tax on general goods or services</field>
-            <field name="description">Generic city tax (to be replaced by an actual city tax)</field>
+            <field name="name">Uniform city tax on general goods or services (to be replaced by an actual city tax)</field>
+            <field name="description">Generic city tax</field>
             <field name="group" ref="group_01"/>
             <field name="type">none</field>
             <field name="rate_type">general</field>
+            <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_city_food">
-            <field name="name">Uniform city tax on food</field>
-            <field name="description">Generic city tax (to be replaced by an actual city tax)</field>
+            <field name="name">Uniform city tax on food and drugs (to be replaced by an actual city tax)</field>
+            <field name="description">Generic city tax</field>
             <field name="group" ref="group_01"/>
             <field name="type">none</field>
             <field name="rate_type">food</field>
+            <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
 
         <record model="account.tax.template" id="tax_uniform_town_general">
-            <field name="name">Uniform town tax on general goods or services</field>
-            <field name="description">Generic town tax (to be replaced by an actual town tax)</field>
+            <field name="name">Uniform town tax on general goods or services (to be replaced by an actual town tax)</field>
+            <field name="description">Generic town tax</field>
             <field name="group" ref="group_02"/>
             <field name="type">none</field>
             <field name="rate_type">general</field>
+            <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_town_food">
-            <field name="name">Uniform town tax on food</field>
-            <field name="description">Generic town tax (to be replaced by an actual town tax)</field>
+            <field name="name">Uniform town tax on food and drugs (to be replaced by an actual town tax)</field>
+            <field name="description">Generic town tax</field>
             <field name="group" ref="group_02"/>
             <field name="type">none</field>
             <field name="rate_type">food</field>
+            <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
 
         <record model="account.tax.template" id="tax_uniform_special_district_general">
-            <field name="name">Uniform special district tax on general goods or services</field>
-            <field name="description">Generic special district tax (to be replaced by an actual special district tax)</field>
+            <field name="name">Uniform special district tax on general goods or services (to be replaced by an actual special district tax)</field>
+            <field name="description">Generic special district tax</field>
             <field name="group" ref="group_63"/>
             <field name="type">none</field>
             <field name="rate_type">general</field>
+            <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_special_district_food">
-            <field name="name">Uniform special district tax on food</field>
-            <field name="description">Generic special district tax (to be replaced by an actual special district tax)</field>
+            <field name="name">Uniform special district tax on food and drugs (to be replaced by an actual special district tax)</field>
+            <field name="description">Generic special district tax</field>
             <field name="group" ref="group_63"/>
             <field name="type">none</field>
             <field name="rate_type">food</field>
+            <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
 
