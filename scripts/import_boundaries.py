@@ -17,10 +17,13 @@ from proteus import Model, config
 from common import fetch, get_company, get_places, _progress
 
 
-def clean_boundaries(code_subdivision):
+def clean_boundaries(code_subdivision, company=None):
     sys.stderr.write('Cleaning boundaries')
     sys.stderr.flush()
-    company = get_company()
+
+    if not company:
+        company = get_company()
+
     Boundary = Model.get('account.tax.boundary')
     Boundary._proxy.delete([], {})
         #[c.id for c in Boundary.find([
@@ -28,10 +31,13 @@ def clean_boundaries(code_subdivision):
         #    ])], {})
     print('.', file=sys.stderr)
 
-def clean_tax_rules(code_subdivision):
+def clean_tax_rules(code_subdivision, company=None):
     sys.stderr.write('Cleaning tax rules')
     sys.stderr.flush()
-    company = get_company()
+
+    if not company:
+        company = get_company()
+
     TaxRule = Model.get('account.tax.rule')
     TaxRule._proxy.delete(
         [c.id for c in TaxRule.find([
@@ -40,10 +46,13 @@ def clean_tax_rules(code_subdivision):
             ])], {})
     print('.', file=sys.stderr)
 
-def clean_tax_codes(code_subdivision):
+def clean_tax_codes(code_subdivision, company=None):
     sys.stderr.write('Cleaning tax codes')
     sys.stderr.flush()
-    company = get_company()
+
+    if not company:
+        company = get_company()
+
     TaxCode = Model.get('account.tax.code')
     TaxCode._proxy.delete(
         [c.id for c in TaxCode.find([
@@ -52,12 +61,13 @@ def clean_tax_codes(code_subdivision):
             ])], {})
     print('.', file=sys.stderr)
 
+
 class TaxRuleCollector:
 
     def __init__(self, places, company=None):
         self.places = places
         self.rules = {}
-        self.tax_sets = {}
+        self.taxes = {}
         self.generic_taxes = {}
         self.company = company or get_company()
 
@@ -77,7 +87,7 @@ class TaxRuleCollector:
         return rule
 
     def get_taxes(self, code, authority):
-        taxes = self.tax_sets.get(code)
+        taxes = self.taxes.get(code)
         if not taxes:
             Tax = Model.get('account.tax')
             try:
@@ -90,7 +100,7 @@ class TaxRuleCollector:
                     ])
             except ValueError:
                 return []
-            self.tax_sets[code] = taxes
+            self.taxes[code] = taxes
         return taxes
 
     def get_generic_tax(self, tax):
@@ -113,11 +123,11 @@ class TaxRuleCollector:
         return generic_tax
 
     def collect(self, row):
+        authority = self.places[row['fips_state_code']]
         fips_codes = _fips_indices(row)
         special_codes = map(_special_code_index, batched(row['special_districts'], n=3))
         codes = tuple(filter(None, chain(fips_codes, special_codes)))
         name = '%s Retail' % '–'.join(codes)
-        authority = self.places[row['fips_state_code']]
 
         rule = self.get_rule(name, authority)
 
@@ -162,15 +172,16 @@ class TaxCodeCollector:
 
         authority = None
         try:
-            authority, = [v for v in places.values() if v.parent == None]
+            authority, = [v for v in places.values() if not v.parent]
         except:
             sys.exit("\nError could not find a state authority for the code: %s" % code_subdivision)
         self.authority = authority
 
-        with open(os.path.join(os.path.dirname(__file__),
-                               'jurisdictions.csv'), newline='') as csvfile:
-            reader = csv.DictReader(csvfile, fieldnames=['code', 'code_tax', 'name'])
-            self.names = {r['code_tax']: r['name'] for r in reader if r['code'] == code_subdivision}
+        codenames = os.path.join(os.path.dirname(__file__), 'codenames.csv')
+        if os.path.isfile(codenames):
+            with open(codenames, newline='') as csvfile:
+                reader = csv.DictReader(csvfile, fieldnames=['code', 'code_tax', 'name'])
+                self.names = {r['code_tax']: r['name'] for r in reader if r['code'] == code_subdivision}
 
         TaxCode = Model.get('account.tax.code')
         root = TaxCode(name="%s Streamlined Sales Tax Report" % self.authority.subdivision.name,
@@ -255,13 +266,17 @@ class TaxCodeCollector:
             tax_code.save()
         return tax_code
 
-def import_(code_subdivision, boundaries, from_date):
+
+def import_(code_subdivision, boundaries, from_date, company=None):
     sys.stderr.write('Importing boundaries active as of %s' % from_date.isoformat())
     sys.stderr.flush()
-    Boundary = Model.get('account.tax.boundary')
 
-    company = get_company()
+    Boundary = Model.get('account.tax.boundary')
     places = get_places(code_subdivision)
+
+    if not company:
+        company = get_company()
+
     code_collector = TaxCodeCollector(code_subdivision, places, company=company)
     rule_collector = TaxRuleCollector(places, company=company)
 
