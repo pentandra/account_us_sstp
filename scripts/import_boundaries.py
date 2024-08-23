@@ -19,6 +19,7 @@ from common import fetch, get_places, _progress
 def clean_boundaries(code):
     sys.stderr.write('Cleaning boundaries')
     sys.stderr.flush()
+    company = get_company()
     Boundary = Model.get('account.tax.boundary')
     Boundary._proxy.delete([], {})
         #[c.id for c in Boundary.find([
@@ -29,28 +30,35 @@ def clean_boundaries(code):
 def clean_tax_rules(code):
     sys.stderr.write('Cleaning tax rules')
     sys.stderr.flush()
+    company = get_company()
     TaxRule = Model.get('account.tax.rule')
     TaxRule._proxy.delete(
         [c.id for c in TaxRule.find([
             ('authority.subdivision.code', '=', code),
+            ('company', '=', company),
             ])], {})
     print('.', file=sys.stderr)
 
 def clean_tax_codes(code):
     sys.stderr.write('Cleaning tax codes')
     sys.stderr.flush()
+    company = get_company()
     TaxCode = Model.get('account.tax.code')
     TaxCode._proxy.delete(
-        [c.id for c in TaxCode.find([('authority.subdivision.code', '=', code)])], {})
+        [c.id for c in TaxCode.find([
+            ('authority.subdivision.code', '=', code),
+            ('company', '=', company),
+            ])], {})
     print('.', file=sys.stderr)
 
 class TaxRuleCollector:
 
-    def __init__(self, code, places):
+    def __init__(self, places, company=None):
         self.places = places
         self.rules = {}
         self.tax_sets = {}
         self.generic_taxes = {}
+        self.company = company or get_company()
 
         self.Tax = Model.get('account.tax')
         self.TaxRule = Model.get('account.tax.rule')
@@ -64,6 +72,7 @@ class TaxRuleCollector:
                 rule, = self.TaxRule.find([
                     ('authority', '=', authority),
                     ('jurisdiction.code_fips', '=', code_fips),
+                    ('company', '=', self.company),
                     ])
             except ValueError:
                 return
@@ -78,6 +87,7 @@ class TaxRuleCollector:
                 taxes = self.Tax.find([
                     ('authority', '=', authority),
                     ('jurisdiction.code_fips', '=', code_fips),
+                    ('company', '=', self.company),
                     ('type', '=', 'none'),
                     ('parent', '=', None),
                     ])
@@ -116,7 +126,8 @@ class TaxRuleCollector:
                     jurisdiction.subdivision.code)
             rule = self.TaxRule(
                     name=name,
-                    jurisdiction=jurisdiction,
+                    company=self.company,
+                    place=place,
                     authority=authority)
 
             for code_fips in ['fips_state_indicator', 'fips_county_code', 'fips_place_code']:
@@ -147,9 +158,10 @@ class TaxRuleCollector:
 
 class TaxCodeCollector:
 
-    def __init__(self, code, places):
+    def __init__(self, code, places, company=None):
         self.tax_codes = {}
         self.places = places
+        self.company = company or get_company()
 
         authority = None
         try:
@@ -166,6 +178,7 @@ class TaxCodeCollector:
         TaxCode = Model.get('account.tax.code')
         root = TaxCode(name="%s Streamlined Sales Tax Report" % self.authority.subdivision.name,
                        code='SSTR-%s' % self.authority.subdivision.code,
+                       company=self.company,
                        authority=self.authority)
         root.save()
 
@@ -173,18 +186,21 @@ class TaxCodeCollector:
         taxable_sales.name = "Taxable Sales"
         taxable_sales.code = 'A'
         taxable_sales.authority = self.authority
+        taxable_sales.company = self.company
         taxable_sales.save()
 
         total_sales = taxable_sales.childs.new()
         total_sales.name = "Total Sales"
         total_sales.code = '1'
         total_sales.authority = self.authority
+        total_sales.company = self.company
         total_sales.save()
 
         exemptions = taxable_sales.childs.new()
         exemptions.name = "Exemptions and Deductions"
         exemptions.code = '2'
         exemptions.authority = self.authority
+        exemptions.company = self.company
         exemptions.save()
 
         for name in ['Agriculture', 'Direct Pay', 'Government Exemption Organizations',
@@ -192,12 +208,14 @@ class TaxCodeCollector:
             subcode = exemptions.childs.new()
             subcode.name = name
             subcode.authority = self.authority
+            subcode.company = self.company
             subcode.save()
 
         total_tax = root.childs.new()
         total_tax.name = "Total Tax Due"
         total_tax.code = 'B'
         total_tax.authority = self.authority
+        total_tax.company = self.company
         total_tax.save()
 
         self.total_sales = total_sales
@@ -211,6 +229,7 @@ class TaxCodeCollector:
             try:
                 tax_code, = TaxCode.find([
                     ('authority', '=', self.authority),
+                    ('company', '=', self.company),
                     ('code', '=', code_tax),
                     ])
             except ValueError:
@@ -234,6 +253,7 @@ class TaxCodeCollector:
             tax_code.name = name
             tax_code.code = code_tax
             tax_code.authority = self.authority
+            tax_code.company = self.company
 
             tax_code.save()
         return tax_code
@@ -243,9 +263,10 @@ def import_(code, boundaries, from_date):
     sys.stderr.flush()
     Boundary = Model.get('account.tax.boundary')
 
+    company = get_company()
     places = get_places(code)
-    code_collector = TaxCodeCollector(code, places)
-    rule_collector = TaxRuleCollector(code, places)
+    code_collector = TaxCodeCollector(code, places, company=company)
+    rule_collector = TaxRuleCollector(places, company=company)
 
     _seen = defaultdict(set)
     def seen(rule, code=None):
@@ -313,6 +334,7 @@ def import_(code, boundaries, from_date):
                     start_date=start_date,
                     end_date=end_date,
                     authority=authority,
+                    company=company,
                     zipcode_low=row['zipcode_low'],
                     zipext_low=row['zipext_low'],
                     zipcode_high=row['zipcode_high'],

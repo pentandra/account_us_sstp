@@ -201,16 +201,24 @@ class TaxBoundary(ModelView, ModelSQL, MatchMixin):
     authority = fields.Many2One('census.place', "Authority",
             domain=[('parent', '=', None)], required=True,
             help="The entity that administers this tax boundary")
+    company = fields.Many2One('company.company', "Company", required=True)
     rule = fields.Many2One('account.tax.rule', "Tax Rule",
             domain=[
-                ('authority', '=', Eval('authority', -1))
+                ('authority', '=', Eval('authority', -1)),
+                ('company', '=', Eval('company', -1)),
                 ],
             ondelete='RESTRICT', required=True)
     code = fields.Many2One('account.tax.code', "Tax Code",
             domain=[
-                ('authority', '=', Eval('authority', -1))
+                ('authority', '=', Eval('authority', -1)),
+                ('company', '=', Eval('company', -1)),
                 ],
             ondelete='RESTRICT')
+
+    @staticmethod
+    def default_company():
+        return Transaction().context.get('company')
+
 
 class TaxCode(metaclass=PoolMeta):
     "Tax Code"

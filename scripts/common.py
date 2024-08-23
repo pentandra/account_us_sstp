@@ -81,3 +81,8 @@ def get_places(code):
     Place = Model.get('census.place')
     return {p.code_fips: p for p in Place.find([('subdivision.code', '=', code)])}
 
+def get_company():
+    Company = Model.get('company.company')
+    company, = Company.find()
+    return company
+

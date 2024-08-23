@@ -12,29 +12,22 @@ from argparse import ArgumentParser
 from io import BytesIO, TextIOWrapper
 from proteus import Model, config
 
-from common import fetch, get_places, _progress
+from common import fetch, get_company, get_places, _progress
 
 
-def get_taxes(code):
+def get_taxes(code, company):
     Tax = Model.get('account.tax')
     return {(t.name, t.start_date): t for t in Tax.find([
         ('authority.subdivision.code', '=', code),
+        ('company', '=', company.id),
         ])}
 
 def get_groups():
     TaxGroup = Model.get('account.tax.group')
     return {g.code: g for g in TaxGroup.find([])}
 
-def get_company():
-    Company = Model.get('company.company')
-    company, = Company.find()
-    return company
-
-def get_tax_account(name, company=None):
+def get_tax_account(name, company):
     Account = Model.get('account.account')
-
-    if not company:
-        company = get_company()
 
     return Account.find([
         ('company', '=', company.id),
@@ -49,9 +42,10 @@ def update_taxes(code, stream, from_date, account):
     Tax = Model.get('account.tax')
 
     places = get_places(code)
-    taxes = get_taxes(code)
     groups = get_groups()
-    tax_account, = get_tax_account(account)
+    company = get_company()
+    taxes = get_taxes(code, company)
+    tax_account, = get_tax_account(account, company)
 
     today = date.today()
     far_future = today.replace(year=today.year + 100)
@@ -96,6 +90,7 @@ def update_taxes(code, stream, from_date, account):
                 parent.authority = authority
                 parent.type = 'none'
                 parent.group = group
+                parent.company = company
                 parent.sourcing = sourcing
                 parent.rate_type = rate_type
                 parent.sequence = sequence
@@ -115,6 +110,7 @@ def update_taxes(code, stream, from_date, account):
             record.authority = authority
             record.type = 'percentage'
             record.group = group
+            record.company = company
             record.rate = Decimal(row[type_])
             record.sourcing = sourcing
             record.rate_type = rate_type
