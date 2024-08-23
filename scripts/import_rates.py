@@ -74,8 +74,6 @@ def update_taxes(code_subdivision, stream, from_date, account):
         for type_ in ['general_rate_intrastate', 'general_rate_interstate',
             'food_rate_intrastate', 'food_rate_interstate']:
             name = '%s %s' % (code_fips, type_) #TODO: isn't there a better name?
-            description = '%s tax (%s)' % (code_fips
-                    if place is None else place.name, row[type_])
             sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
             rate_type = 'general' if 'general' in type_ else 'food'
 
@@ -87,7 +85,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
 
                 parent.code = code_fips
                 parent.place = place
-                parent.description = description
+                parent.description = '%s tax' % place.name if place else code_fips
                 parent.authority = authority
                 parent.type = 'none'
                 parent.group = group
@@ -108,7 +106,8 @@ def update_taxes(code_subdivision, stream, from_date, account):
 
             record.code = code_fips
             record.place = place
-            record.description = description
+            record.description = '%s tax (%s)' % (place.name if place else code_fips,
+                                                  row[type_])
             record.authority = authority
             record.type = 'percentage'
             record.group = group
