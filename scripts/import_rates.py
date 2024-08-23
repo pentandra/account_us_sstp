@@ -15,10 +15,10 @@ from proteus import Model, config
 from common import fetch, get_company, get_places, _progress
 
 
-def get_taxes(code, company):
+def get_taxes(code_subdivision, company):
     Tax = Model.get('account.tax')
     return {(t.name, t.start_date): t for t in Tax.find([
-        ('authority.subdivision.code', '=', code),
+        ('authority.subdivision.code', '=', code_subdivision),
         ('company', '=', company.id),
         ])}
 
@@ -37,14 +37,14 @@ def get_tax_account(name, company):
          ],
         ], limit=1)
 
-def update_taxes(code, stream, from_date, account):
+def update_taxes(code_subdivision, stream, from_date, account):
     print('Importing rates active as of %s' % from_date.isoformat(), file=sys.stderr)
     Tax = Model.get('account.tax')
 
-    places = get_places(code)
+    places = get_places(code_subdivision)
     groups = get_groups()
     company = get_company()
-    taxes = get_taxes(code, company)
+    taxes = get_taxes(code_subdivision, company)
     tax_account, = get_tax_account(account, company)
 
     today = date.today()
@@ -161,8 +161,8 @@ def do_import(args):
         else:
             account = args.account
         from_date = date.min if args.all else args.from_date
-        tryton_code = 'US-%s' % code.upper()
-        taxes = update_taxes(tryton_code, fetch(code.upper(), _base), from_date, account)
+        code_subdivision = 'US-%s' % code.upper()
+        taxes = update_taxes(code_subdivision, fetch(code.upper(), _base), from_date, account)
         update_taxes_parent(taxes)
 
 

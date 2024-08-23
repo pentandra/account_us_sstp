@@ -279,7 +279,7 @@ def import_(code_subdivision, boundaries, from_date):
             return False
 
     _taxes = set()
-    def setup_tax_lines(code, tax, amount='tax'):
+    def setup_tax_code_lines(code, tax, amount='tax'):
         for op, type_ in zip(['+', '-'], ['invoice', 'credit']):
             line = code.lines.new()
             line.operator = op
@@ -305,7 +305,7 @@ def import_(code_subdivision, boundaries, from_date):
                 for tax in line.tax.childs:
                     taxes = [line.tax for line in tax_code.lines]
                     if tax not in taxes:
-                        setup_tax_lines(tax_code, tax)
+                        setup_tax_code_lines(tax_code, tax)
                         _taxes.add(tax)
             tax_code.save()
         elif not tax_code and not seen(rule):
@@ -314,7 +314,7 @@ def import_(code_subdivision, boundaries, from_date):
                     total_tax = code_collector.total_tax
                     taxes = [line.tax for line in total_tax.lines]
                     if not tax in taxes:
-                        setup_tax_lines(total_tax, tax)
+                        setup_tax_code_lines(total_tax, tax)
                         _taxes.add(tax)
             total_tax.save()
 
@@ -346,7 +346,7 @@ def import_(code_subdivision, boundaries, from_date):
     for tax in _taxes:
         # only the state-level bases are needed
         if tax.place == code_collector.authority:
-            setup_tax_lines(total_sales, tax, amount='base')
+            setup_tax_code_lines(total_sales, tax, amount='base')
     total_sales.save()
 
     print('.', file=sys.stderr)
@@ -370,15 +370,15 @@ def main(database, args, config_file=None):
 
 
 def do_import(args):
-    for code_subdivision in args.codes:
-        print(code_subdivision, file=sys.stderr)
-        tryton_code = 'US-%s' % code_subdivision.upper()
+    for code in args.codes:
+        print(code, file=sys.stderr)
+        code_subdivision = 'US-%s' % code.upper()
         from_date = date.min if args.all else args.from_date
 
-        clean_boundaries(tryton_code)
-        clean_tax_rules(tryton_code)
-        clean_tax_codes(tryton_code)
-        import_(tryton_code, fetch(code_subdivision.upper(), _base), from_date)
+        clean_boundaries(code_subdivision)
+        clean_tax_rules(code_subdivision)
+        clean_tax_codes(code_subdivision)
+        import_(code_subdivision, fetch(code.upper(), _base), from_date)
 
 
 def run():
