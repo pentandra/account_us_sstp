@@ -20,7 +20,7 @@ class Tax(metaclass=PoolMeta):
     authority = fields.Many2One('census.place', "Authority",
             domain=[('parent', '=', None)], states=_states,
             help="The entity that administers this tax")
-    jurisdiction = fields.Many2One('census.place', "Jurisdiction",
+    place = fields.Many2One('census.place', "Related Place",
             states={
                 'invisible': Bool(Eval('parent')),
                 'readonly': _states['readonly'],
@@ -254,8 +254,7 @@ class TaxRule(metaclass=PoolMeta):
     authority = fields.Many2One('census.place', "Authority",
             domain=[('parent', '=', None)],
             help="The entity that administers this tax")
-    jurisdiction = fields.Many2One('census.place', "Jurisdiction",
-        help="The tax jurisdiction represented by this rule")
+    place = fields.Many2One('census.place', "Related Place")
 
     @classmethod
     def copy(cls, rules, default=None):

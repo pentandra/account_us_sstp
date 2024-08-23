@@ -2,7 +2,7 @@
 
 <data>
     <xpath expr="/tree/field[@name='kind']" position="after">
-        <field name="jurisdiction" optional="1"/>
+        <field name="place" optional="1"/>
         <field name="authority" optional="1"/>
     </xpath>
 </data>

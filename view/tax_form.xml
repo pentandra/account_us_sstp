@@ -2,9 +2,10 @@
 
 <data>
     <xpath expr="/form/notebook/page[@id='general']/label[@name='start_date']" position="before">
-        <label name="jurisdiction"/>
-        <field name="jurisdiction"/>
-        <newline/>
+        <label name="place"/>
+        <field name="place"/>
+        <label name="code"/>
+        <field name="code"/>
     </xpath>
     <xpath expr="/form/notebook/page[@id='general']" position="after">
         <page string="Streamlined Sales Tax Parameters" id="sst_params">

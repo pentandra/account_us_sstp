@@ -2,7 +2,7 @@
 
 <data>
     <xpath expr="/form/field[@name='company']" position="after">
-        <label name="jurisdiction"/>
-        <field name="jurisdiction"/>
+        <label name="place"/>
+        <field name="place"/>
     </xpath>
 </data>

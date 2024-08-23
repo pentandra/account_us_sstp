@@ -62,14 +62,14 @@ def update_taxes(code, stream, from_date, account):
     for row in _progress(list(csv.DictReader(f, fieldnames=_fieldnames))):
         authority = places[row['state']]
         code_fips = row['jurisdiction_fips_code']
-        jurisdiction = places.get(row['jurisdiction_fips_code'])
+        place = places.get(row['jurisdiction_fips_code'])
         group = groups[row['jurisdiction_type']]
         start_date = date.fromisoformat(row['start_date'])
         end_date = date.fromisoformat(row['end_date'])
 
         sequence = None
-        if jurisdiction:
-            match jurisdiction.level:
+        if place:
+            match place.level:
                 case 'state':
                     sequence = 0
                 case 'county':
@@ -81,7 +81,7 @@ def update_taxes(code, stream, from_date, account):
             'food_rate_intrastate', 'food_rate_interstate']:
             name = '%s %s' % (code_fips, type_) #TODO: isn't there a better name?
             description = '%s tax (%s)' % (code_fips
-                    if jurisdiction is None else jurisdiction.name, row[type_])
+                    if place is None else place.name, row[type_])
             sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
             rate_type = 'general' if 'general' in type_ else 'food'
 
@@ -91,7 +91,7 @@ def update_taxes(code, stream, from_date, account):
                 else:
                     parent = Tax(name=name)
 
-                parent.jurisdiction = jurisdiction
+                parent.place = place
                 parent.description = description
                 parent.authority = authority
                 parent.type = 'none'
@@ -110,7 +110,7 @@ def update_taxes(code, stream, from_date, account):
             else:
                 record = Tax(name=name)
 
-            record.jurisdiction = jurisdiction
+            record.place = place
             record.description = description
             record.authority = authority
             record.type = 'percentage'
