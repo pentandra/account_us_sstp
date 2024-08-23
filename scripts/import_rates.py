@@ -50,9 +50,15 @@ def update_taxes(code_subdivision, stream, from_date, account):
     today = date.today()
     far_future = today.replace(year=today.year + 100)
 
+    _seen = set()
+    def seen(name):
+        if name in _seen:
+            return True
+        _seen.add(name)
+        return False
+
     f = TextIOWrapper(BytesIO(stream), encoding='utf-8-sig')
     records = []
-    current_code_fips = None
     for row in _progress(list(csv.DictReader(f, fieldnames=_fieldnames))):
         authority = places[row['state']]
         code_fips = row['jurisdiction_fips_code']
@@ -77,7 +83,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
             sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
             rate_type = 'general' if 'general' in type_ else 'food'
 
-            if current_code_fips != code_fips:
+            if not seen(name):
                 if (name, None) in taxes:
                     parent = taxes[(name, None)]
                 else:
@@ -122,7 +128,6 @@ def update_taxes(code_subdivision, stream, from_date, account):
             record.sequence = sequence
 
             records.append(record)
-        current_code_fips = code_fips
 
     Tax.save(records)
     return {(r.name, r.start_date): r for r in records}
