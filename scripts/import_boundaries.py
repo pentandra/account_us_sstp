@@ -376,7 +376,6 @@ def do_import(args):
         from_date = date.min if args.all else args.from_date
 
         clean_boundaries(code_subdivision)
-        clean_tax_rules(code_subdivision)
         clean_tax_codes(code_subdivision)
         import_(code_subdivision, fetch(code.upper(), _base), from_date)
 
