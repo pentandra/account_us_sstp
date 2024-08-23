@@ -25,6 +25,11 @@ class Tax(metaclass=PoolMeta):
                 'invisible': Bool(Eval('parent')),
                 'readonly': _states['readonly'],
                 })
+    code = fields.Char("Jurisdiction Code", size=5, states={
+        'required': Bool(Eval('authority')),
+        'invisible': ~Eval('authority') | Bool(Eval('parent')),
+        'readonly': _states['readonly'],
+        })
     sourcing = fields.Selection([
         (None, ""),
         ('intrastate', "In-state Destination"),
@@ -256,6 +261,7 @@ class TaxLine(metaclass=PoolMeta):
     __name__ = 'account.tax.line'
     code = fields.Char("Reporting Code")
 
+
 class TaxRule(metaclass=PoolMeta):
     __name__ = 'account.tax.rule'
 
@@ -263,6 +269,13 @@ class TaxRule(metaclass=PoolMeta):
             domain=[('parent', '=', None)],
             help="The entity that administers this tax")
     place = fields.Many2One('census.place', "Related Place")
+
+    def get_rec_name(self, name):
+        if self.place:
+            return '%s (%s, %s)' % (self.name, self.place.name,
+                                    self.place.subdivision.code)
+        else:
+            return self.name
 
     @classmethod
     def copy(cls, rules, default=None):

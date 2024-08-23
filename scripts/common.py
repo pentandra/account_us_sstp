@@ -77,9 +77,9 @@ def fetch(code, base):
     print('.', file=sys.stderr)
     return data
 
-def get_places(code):
+def get_places(code_subdivision):
     Place = Model.get('census.place')
-    return {p.code_fips: p for p in Place.find([('subdivision.code', '=', code)])}
+    return {p.code_fips: p for p in Place.find([('subdivision.code', '=', code_subdivision)])}
 
 def get_company():
     Company = Model.get('company.company')

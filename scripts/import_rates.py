@@ -38,7 +38,7 @@ def get_tax_account(name, company):
         ], limit=1)
 
 def update_taxes(code, stream, from_date, account):
-    print('Importing taxes active as of %s' % from_date.isoformat(), file=sys.stderr)
+    print('Importing rates active as of %s' % from_date.isoformat(), file=sys.stderr)
     Tax = Model.get('account.tax')
 
     places = get_places(code)
@@ -85,6 +85,7 @@ def update_taxes(code, stream, from_date, account):
                 else:
                     parent = Tax(name=name)
 
+                parent.code = code_fips
                 parent.place = place
                 parent.description = description
                 parent.authority = authority
@@ -105,6 +106,7 @@ def update_taxes(code, stream, from_date, account):
             else:
                 record = Tax(name=name)
 
+            record.code = code_fips
             record.place = place
             record.description = description
             record.authority = authority
