@@ -371,12 +371,7 @@ def update_taxcode_taxes(codes, collector):
     TaxCode = Model.get('account.tax.code')
     TaxRule = Model.get('account.tax.rule')
 
-    _state_taxes = set()
-    def collect_state_taxes(taxes):
-        for tax in taxes:
-            if tax.place and tax.place == collector.authority:
-                _state_taxes.add(tax)
-
+    _tax_bases = set()
     _indie_codes = set()
     records = []
     for code, rules in _progress(list(codes.items())):
@@ -384,12 +379,16 @@ def update_taxcode_taxes(codes, collector):
             taxes = {tax for rule in rules for line in rule.lines for tax in line.tax.childs}
             for tax in sorted(taxes, key=_codesorter):
                 TaxCodeCollector.create_lines(code, tax)
-            collect_state_taxes(taxes)
             records.append(code)
         elif isinstance(code, TaxRule):
             taxes = [tax for line in code.lines for tax in line.tax.childs]
-            collect_state_taxes(taxes)
             _indie_codes.update(taxes)
+        else:
+            taxes = []
+
+        for tax in taxes:
+            if tax.place and tax.place == collector.authority:
+                _tax_bases.add(tax)
 
     indie_codes = sorted(_indie_codes, key=_codesorter)
     for code, taxes in groupby(indie_codes, key=_codesorter):
@@ -402,7 +401,7 @@ def update_taxcode_taxes(codes, collector):
         records.append(taxcode)
 
     total_sales = collector.total_sales
-    for tax in _state_taxes:
+    for tax in _tax_bases:
         collector.create_lines(total_sales, tax, amount='base')
     records.append(total_sales)
 
