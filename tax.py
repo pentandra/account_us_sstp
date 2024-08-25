@@ -12,6 +12,13 @@ from trytond.pyson import Bool, Eval
 from trytond.tools import cursor_dict
 from trytond.transaction import Transaction
 
+PARITY = [
+    (None, ""),
+    ('O', 'Odd'),
+    ('E', 'Even'),
+    ('B', 'Both'),
+    ]
+
 class Tax(metaclass=PoolMeta):
     __name__ = 'account.tax'
     _states = {
@@ -191,6 +198,35 @@ class TaxBoundary(ModelView, ModelSQL, MatchMixin):
         ], "Boundary Type", required=True)
     start_date = fields.Date("Starting Date", required=True)
     end_date = fields.Date("End Date")
+    address_low = fields.Char("Low Address Range", size=10, states={
+        'required': Eval('type') == 'A',
+        }, help="Low end of PO Box or street address numbers")
+    address_high = fields.Char("High Address Range", size=10, states={
+        'required': Eval('type') == 'A',
+        }, help="High end of PO Box or street address numbers")
+    address_parity = fields.Selection(PARITY, "Odd/Even Indicator",
+        help="Indicates whether the given range of address(es) is odd or even. "
+            "For PO Boxes this field should be blank.")
+    street_pre = fields.Char("Street Predirectional", size=2)
+    street = fields.Char("Street Name", size=20, states={
+        'required': Eval('type') == 'A',
+        })
+    street_suffix = fields.Char("Street Suffix Abbreviation", size=4,
+                help="Indicates the type of street")
+    street_post = fields.Char("Street Postdirectional", size=2)
+    secondary = fields.Char("Secondary Address Abbreviation", size=4)
+    secondary_low = fields.Char("Address Secondary Low", size=8)
+    secondary_high = fields.Char("Address Secondary High", size=8)
+    secondary_parity = fields.Selection(PARITY, "Odd/Even Indicator")
+    city = fields.Char("City Name", size=28, states={
+        'required': Eval('type') == 'A',
+        })
+    zipcode = fields.Char("Zip Code", size=5, states={
+        'required': Eval('type') == 'A',
+        })
+    zipext = fields.Char("ZIP+4", size=4, states={
+        'required': Eval('type') == 'A',
+        })
     zipcode_low = fields.Char("ZIP Code Low", size=5, states={
         'required': Eval('type').in_(['Z', '4']),
         })

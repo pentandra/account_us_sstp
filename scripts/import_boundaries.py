@@ -10,8 +10,8 @@ import sys
 
 from argparse import ArgumentParser
 from io import BytesIO, TextIOWrapper
-from itertools import batched, chain
-from operator import itemgetter
+from itertools import batched, chain, groupby
+from operator import attrgetter, itemgetter
 from proteus import Model, config
 
 from common import fetch, get_company, get_places, _progress
@@ -46,7 +46,7 @@ def clean_tax_rules(code_subdivision, company=None):
             ])], {})
     print('.', file=sys.stderr)
 
-def clean_tax_codes(code_subdivision, company=None):
+def clean_taxcodes(code_subdivision, company=None):
     sys.stderr.write('Cleaning tax codes')
     sys.stderr.flush()
 
@@ -166,7 +166,7 @@ class TaxRuleCollector:
 class TaxCodeCollector:
 
     def __init__(self, code_subdivision, places, company=None):
-        self.tax_codes = {}
+        self.taxcodes = {}
         self.places = places
         self.company = company or get_company()
 
@@ -230,44 +230,56 @@ class TaxCodeCollector:
         self.total_tax = total_tax
 
 
-    def get_tax_code(self, code_tax):
-        tax_code = self.tax_codes.get(code_tax)
-        if not tax_code:
+    def get_taxcode(self, code_tax):
+        taxcode = self.taxcodes.get(code_tax)
+        if not taxcode:
             TaxCode = Model.get('account.tax.code')
             try:
-                tax_code, = TaxCode.find([
+                taxcode, = TaxCode.find([
                     ('authority', '=', self.authority),
                     ('company', '=', self.company),
                     ('code', '=', code_tax),
                     ])
             except ValueError:
                 return
-            self.tax_codes[code_tax] = tax_code
-        return tax_code
+            self.taxcodes[code_tax] = taxcode
+        return taxcode
+
+    def create_taxcode(self, code, name):
+        taxcode = self.total_tax.childs.new()
+        taxcode.name = name
+        taxcode.code = code
+        taxcode.authority = self.authority
+        taxcode.company = self.company
+        return taxcode
+
+    @staticmethod
+    def create_lines(code, tax, amount='tax'):
+        for op, type_ in zip(['+', '-'], ['invoice', 'credit']):
+            line = code.lines.new()
+            line.operator = op
+            line.tax = tax
+            line.amount = amount
+            line.type = type_
 
     def collect(self, row):
         code_tax = row['composite_ser_code']
         if not code_tax or all(c == '0' for c in code_tax):
             return
 
-        tax_code = self.get_tax_code(code_tax)
-        if not tax_code:
+        taxcode = self.get_taxcode(code_tax)
+        if not taxcode:
             name = self.names.get(code_tax)
             if not name:
                 print('Could not find jurisdiction name for %s' % code_tax)
                 name = code_tax
 
-            tax_code = self.total_tax.childs.new()
-            tax_code.name = name
-            tax_code.code = code_tax
-            tax_code.authority = self.authority
-            tax_code.company = self.company
-
-            tax_code.save()
-        return tax_code
+            taxcode = self.create_taxcode(name, code_tax)
+            taxcode.save()
+        return taxcode
 
 
-def import_(code_subdivision, boundaries, from_date, company=None):
+def import_boundaries(code_subdivision, boundaries, from_date, company=None):
     sys.stderr.write('Importing boundaries active as of %s' % from_date.isoformat())
     sys.stderr.flush()
 
@@ -293,15 +305,6 @@ def import_(code_subdivision, boundaries, from_date, company=None):
             _seen[rule].add(1)
             return False
 
-    _taxes = set()
-    def setup_tax_code_lines(code, tax, amount='tax'):
-        for op, type_ in zip(['+', '-'], ['invoice', 'credit']):
-            line = code.lines.new()
-            line.operator = op
-            line.tax = tax
-            line.amount = amount
-            line.type = type_
-
     f = TextIOWrapper(BytesIO(boundaries), encoding='utf-8')
     reader = csv.DictReader(f, fieldnames=_fieldnames,
             restkey='special_districts')
@@ -312,27 +315,10 @@ def import_(code_subdivision, boundaries, from_date, company=None):
         end_date = date.fromisoformat(row['end_date'])
         end_date = None if end_date == date.max else end_date
 
-        tax_code = code_collector.collect(row)
+        taxcode = code_collector.collect(row)
         rule = rule_collector.collect(row)
 
-        if tax_code and not seen(rule, code=tax_code):
-            for line in rule.lines:
-                for tax in line.tax.childs:
-                    taxes = [line.tax for line in tax_code.lines]
-                    if tax not in taxes:
-                        setup_tax_code_lines(tax_code, tax)
-                        _taxes.add(tax)
-            tax_code.save()
-        elif not tax_code and not seen(rule):
-            for line in rule.lines:
-                for tax in line.tax.childs:
-                    total_tax = code_collector.total_tax
-                    taxes = [line.tax for line in total_tax.lines]
-                    if not tax in taxes:
-                        setup_tax_code_lines(total_tax, tax)
-                        _taxes.add(tax)
-            total_tax.save()
-
+        seen(rule, code=taxcode)
 
         if reader.line_num % 10000 == 0:
             Boundary.save(records)
@@ -341,36 +327,95 @@ def import_(code_subdivision, boundaries, from_date, company=None):
         if end_date and end_date <= from_date:
             continue
 
-        records.append(Boundary(
-                    type=row['record_type'],
-                    start_date=start_date,
-                    end_date=end_date,
-                    authority=authority,
-                    company=company,
-                    zipcode_low=row['zipcode_low'],
-                    zipext_low=row['zipext_low'],
-                    zipcode_high=row['zipcode_high'],
-                    zipext_high=row['zipext_high'],
-                    rule=rule,
-                    code=tax_code,
-                    ))
+        record_type = row['record_type']
+        record = Boundary(type=record_type,
+                          start_date=start_date,
+                          end_date=end_date,
+                          authority=authority,
+                          company=company,
+                          rule=rule,
+                          code=taxcode)
+
+        if record_type in ('4', 'Z'):
+            record.zipcode_low = row['zipcode_low']
+            record.zipext_low = row['zipext_low']
+            record.zipcode_high = row['zipcode_high']
+            record.zipext_high = row['zipext_high']
+        elif record_type == 'A':
+            record.address_low = row['address_range_low']
+            record.address_high = row['address_range_high']
+            record.address_parity = row['odd_even_indicator']
+            record.street_pre = row['street_pre_directional']
+            record.street = row['street_name']
+            record.street_suffix = row['street_suffix_abbr']
+            record.street_post = row['street_post_directional']
+            record.secondary = row['address_secondary_abbr']
+            record.secondary_low = row['address_secondary_low']
+            record.secondary_high = row['address_secondary_high']
+            record.secondary_parity = row['address_secondary_odd_even']
+            record.city = row['city_name']
+            record.zipcode = row['zipcode']
+            record.zipext = row['plus4']
+        else:
+            print("\nUnknown record type %s: %s" % (record_type, row))
+
+        records.append(record)
 
     Boundary.save(records)
+    print('.', file=sys.stderr)
+    return _seen, code_collector
 
-    total_sales = code_collector.total_sales
-    for tax in _taxes:
-        # only the state-level bases are needed
-        if tax.place == code_collector.authority:
-            setup_tax_code_lines(total_sales, tax, amount='base')
-    total_sales.save()
+def update_taxcode_taxes(codes, collector):
+    sys.stderr.write('Updating taxcode taxes')
+    sys.stderr.flush()
+    TaxCode = Model.get('account.tax.code')
+    TaxRule = Model.get('account.tax.rule')
 
+    _state_taxes = set()
+    def collect_state_taxes(taxes):
+        for tax in taxes:
+            if tax.place and tax.place == collector.authority:
+                _state_taxes.add(tax)
+
+    _indie_codes = set()
+    records = []
+    for code, rules in _progress(list(codes.items())):
+        if isinstance(code, TaxCode):
+            taxes = {tax for rule in rules for line in rule.lines for tax in line.tax.childs}
+            for tax in sorted(taxes, key=_codesorter):
+                TaxCodeCollector.create_lines(code, tax)
+            collect_state_taxes(taxes)
+            records.append(code)
+        elif isinstance(code, TaxRule):
+            taxes = [tax for line in code.lines for tax in line.tax.childs]
+            collect_state_taxes(taxes)
+            _indie_codes.update(taxes)
+
+    indie_codes = sorted(_indie_codes, key=_codesorter)
+    for code, taxes in groupby(indie_codes, key=_codesorter):
+        peek = next(taxes)
+        name = peek.place.name if peek.place else code
+        taxcode = collector.create_taxcode(code, name)
+        taxcode.save()
+        for tax in chain([peek], taxes):
+            collector.create_lines(taxcode, tax)
+        records.append(taxcode)
+
+    total_sales = collector.total_sales
+    for tax in _state_taxes:
+        collector.create_lines(total_sales, tax, amount='base')
+    records.append(total_sales)
+
+    TaxCode.save(records)
     print('.', file=sys.stderr)
 
 _fips_indices = itemgetter('fips_state_indicator', 'fips_county_code', 'fips_place_code')
 _special_code_index = itemgetter(1)
+_codesorter = attrgetter('code')
+
 
 _fieldnames = ['record_type', 'start_date', 'end_date',
-    'address_range_low', 'address_range_high', 'odd_even_indicator', 'street_predirectional',
+    'address_range_low', 'address_range_high', 'odd_even_indicator', 'street_pre_directional',
     'street_name', 'street_suffix_abbr', 'street_post_directional', 'address_secondary_abbr',
     'address_secondary_low', 'address_secondary_high', 'address_secondary_odd_even',
     'city_name', 'zipcode', 'plus4', 'zipcode_low', 'zipext_low', 'zipcode_high', 'zipext_high',
@@ -391,8 +436,12 @@ def do_import(args):
         from_date = date.min if args.all else args.from_date
 
         clean_boundaries(code_subdivision)
-        clean_tax_codes(code_subdivision)
-        import_(code_subdivision, fetch(code.upper(), _base), from_date)
+        clean_taxcodes(code_subdivision)
+        taxcodes, collector = import_boundaries(
+                code_subdivision, fetch(code.upper(), _base), from_date)
+        update_taxcode_taxes(taxcodes, collector)
+
+
 
 
 def run():
