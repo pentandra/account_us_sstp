@@ -67,7 +67,7 @@ for dep in info.get('depends', []):
         requires.append(get_require_version('trytond_%s' % dep))
 requires.append(get_require_version('trytond'))
 
-tests_require = []
+tests_require = [get_require_version('proteus')]
 dependency_links = []
 if minor_version % 2:
     dependency_links.append(
@@ -77,10 +77,10 @@ if minor_version % 2:
 
 setup(name=name,
     version=version,
-    description='Tryton module for US sales tax using the Streamlined Sales Tax Project',
+    description='Tryton module for the US Streamlined Sales Tax Project',
     long_description=read('README.rst'),
     author='Pentandra',
-    author_email='issues@pentandra.org',
+    author_email='issues@pentandra.com',
     url='https://github.com/pentandra/account_us_sstp',
     download_url=download_url,
     project_urls={
@@ -130,6 +130,7 @@ setup(name=name,
         'Natural Language :: Slovenian',
         'Natural Language :: Spanish',
         'Natural Language :: Turkish',
+        'Natural Language :: Ukrainian',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
@@ -143,12 +144,18 @@ setup(name=name,
     python_requires='>=3.7',
     install_requires=requires,
     extras_require={
+        'data': [get_require_version('proteus')],
         'test': tests_require,
+        'completion': ['argcomplete'],
         },
     dependency_links=dependency_links,
     zip_safe=False,
     entry_points="""
     [trytond.modules]
     account_us_sstp = trytond.modules.account_us_sstp
+    [console_scripts]
+    trytond_import_places = trytond.modules.account_us_sstp.scripts.import_places:run [data]
+    trytond_import_rates = trytond.modules.account_us_sstp.scripts.import_rates:run [data]
+    trytond_import_boundaries = trytond.modules.account_us_sstp.scripts.import_boundaries:run [data]
     """,  # noqa: E501
     )

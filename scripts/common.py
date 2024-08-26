@@ -23,6 +23,10 @@ except ImportError:
     prog = os.path.basename(sys.argv[0])
     sys.exit("proteus must be installed to use %s" % prog)
 
+if not sys.version_info >= (3, 12):
+    prog = os.path.basename(sys.argv[0])
+    sys.exit("%s must be run using Python 3.12 or higher", % prog)
+
 class LinksExtractor(HTMLParser):
     def __init__(self):
         super().__init__()
