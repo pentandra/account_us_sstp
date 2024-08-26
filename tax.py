@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sql import Literal
+from sql import Literal, Null
 from sql.aggregate import Sum
 from sql.conditionals import Case
 
@@ -18,6 +18,7 @@ PARITY = [
     ('E', 'Even'),
     ('B', 'Both'),
     ]
+
 
 class Tax(metaclass=PoolMeta):
     __name__ = 'account.tax'
@@ -150,7 +151,8 @@ class Tax(metaclass=PoolMeta):
         if code_id and amount == 'tax':
             TaxCode = Pool().get('account.tax.code')
             code = TaxCode(code_id)
-            return where & (tax_line.code == code.code)
+            return where & ((tax_line.code == code.code)
+                            | (tax_line.code == Null))
         else:
             return where
 
@@ -287,8 +289,19 @@ class TaxCodeLine(metaclass=PoolMeta):
         domain = super()._line_domain
         domain.append(['OR',
             [('code', '=', self.code.code)],
-            [('type', '=', 'base')],
+            [('code', '=', None)],
             ])
+
+        context = Transaction().context
+        sourcing = context.get('sourcing')
+        product = context.get('product')
+
+        if sourcing:
+            domain.append([('tax.sourcing', '=', sourcing)])
+
+        if product:
+            domain.append([('tax.product', '=', product)])
+
         return domain
 
 
