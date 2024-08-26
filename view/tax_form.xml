@@ -11,8 +11,8 @@
         <page string="Streamlined Sales Tax Parameters" id="sst_params">
             <label name="sourcing"/>
             <field name="sourcing"/>
-            <label name="rate_type"/>
-            <field name="rate_type"/>
+            <label name="product"/>
+            <field name="product"/>
         </page>
     </xpath>
 </data>

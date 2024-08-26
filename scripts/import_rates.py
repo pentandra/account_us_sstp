@@ -15,11 +15,11 @@ from proteus import Model, config
 
 from common import fetch, get_company, get_places, _progress
 
-_TaxKey = namedtuple('_TaxKey', ['code', 'sourcing', 'rate_type', 'start_date'])
+_TaxKey = namedtuple('_TaxKey', ['code', 'sourcing', 'product', 'start_date'])
 
 def get_taxes(code_subdivision, company):
     Tax = Model.get('account.tax')
-    return {(t.code, t.sourcing, t.rate_type, t.start_date): t for t in Tax.find([
+    return {(t.code, t.sourcing, t.product, t.start_date): t for t in Tax.find([
         ('authority.subdivision.code', '=', code_subdivision),
         ('company', '=', company.id),
         ])}
@@ -82,10 +82,10 @@ def update_taxes(code_subdivision, stream, from_date, account):
         for type_ in ['general_rate_intrastate', 'general_rate_interstate',
             'food_rate_intrastate', 'food_rate_interstate']:
             sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
-            rate_type = 'general' if 'general' in type_ else 'food'
+            product = 'general' if 'general' in type_ else 'food'
 
             name = [authority.subdivision.code, "uniform sales and use tax"]
-            match rate_type:
+            match product:
                 case 'general':
                     name.append("on general goods or services")
                 case 'food':
@@ -100,14 +100,14 @@ def update_taxes(code_subdivision, stream, from_date, account):
 
             name = '—'.join([' '.join(name), postfix])
 
-            if not seen((code_tax, sourcing, rate_type, None)):
+            if not seen((code_tax, sourcing, product, None)):
 
-                if (code_tax, sourcing, rate_type, None) in taxes:
-                    parent = taxes[(code_tax, sourcing, rate_type, None)]
+                if (code_tax, sourcing, product, None) in taxes:
+                    parent = taxes[(code_tax, sourcing, product, None)]
                 else:
                     parent = Tax(code=code_tax,
                                  sourcing=sourcing,
-                                 rate_type=rate_type,
+                                 product=product,
                                  start_date=None)
 
                 parent.name = name
@@ -124,12 +124,12 @@ def update_taxes(code_subdivision, stream, from_date, account):
             if end_date and end_date <= from_date:
                 continue # import the parent at least for complete tax rules
 
-            if (code_tax, sourcing, rate_type, start_date) in taxes:
-                record = taxes[(code_tax, sourcing, rate_type, start_date)]
+            if (code_tax, sourcing, product, start_date) in taxes:
+                record = taxes[(code_tax, sourcing, product, start_date)]
             else:
                 record = Tax(code=code_tax,
                              sourcing=sourcing,
-                             rate_type=rate_type,
+                             product=product,
                              start_date=start_date)
 
             record.name = name
@@ -149,7 +149,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
             records.append(record)
 
     Tax.save(records)
-    return {(r.code, r.sourcing, r.rate_type, r.start_date): r for r in records}
+    return {(r.code, r.sourcing, r.product, r.start_date): r for r in records}
 
 def update_taxes_parent(taxes):
     print("Update taxes parent", file=sys.stderr)
@@ -160,8 +160,8 @@ def update_taxes_parent(taxes):
         if record.type == 'none':
             continue
 
-        code, sourcing, rate_type, start_date = k
-        record.parent = taxes[(code, sourcing, rate_type, None)]
+        code, sourcing, product, start_date = k
+        record.parent = taxes[(code, sourcing, product, None)]
         records.append(record)
     Tax.save(records)
 

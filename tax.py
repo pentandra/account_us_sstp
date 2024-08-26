@@ -45,11 +45,11 @@ class Tax(metaclass=PoolMeta):
         ], "Sourcing", sort=False, states={
             'readonly': _states['readonly'],
             })
-    rate_type = fields.Selection([
+    product = fields.Selection([
         (None, ""),
-        ('general', "General Rate"),
-        ('food', "Food & Drug Rate"),
-        ], "Rate Type", sort=False, states={
+        ('general', "General Goods & Services"),
+        ('food', "Food & Drugs"),
+        ], "Product Class", sort=False, states={
             'readonly': _states['readonly'],
             })
     del _states
@@ -158,14 +158,14 @@ class Tax(metaclass=PoolMeta):
     def _amount_where_tax(cls, tax_line, move_line, move, tax):
         context = Transaction().context
         sourcing = context.get('sourcing')
-        rate_type = context.get('rate_type')
+        product = context.get('product')
 
         where = Literal(True)
         if sourcing:
             where = where & (tax.sourcing == sourcing)
 
-        if rate_type:
-            where = where & (tax.rate_type == rate_type)
+        if product:
+            where = where & (tax.product == product)
 
         return where
 
@@ -181,11 +181,11 @@ class TaxCodeContext(metaclass=PoolMeta):
         ('origin', "Origin"),
         ], "Sourcing", sort=False)
 
-    rate_type = fields.Selection([
+    product = fields.Selection([
         (None, ""),
-        ('general', "General Rate"),
-        ('food', "Food & Drug Rate"),
-        ], "Rate Type", sort=False)
+        ('general', "General Goods & Services"),
+        ('food', "Food & Drugs"),
+        ], "Product Class", sort=False)
 
 
 class TaxBoundary(ModelView, ModelSQL, MatchMixin):
