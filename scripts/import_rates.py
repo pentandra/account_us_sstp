@@ -3,6 +3,7 @@
 # this repository contains the full copyright notices and license terms.
 
 import csv
+from collections import namedtuple
 from datetime import date
 from decimal import Decimal
 import os
@@ -14,10 +15,11 @@ from proteus import Model, config
 
 from common import fetch, get_company, get_places, _progress
 
+_TaxKey = namedtuple('_TaxKey', ['code', 'sourcing', 'rate_type', 'start_date'])
 
 def get_taxes(code_subdivision, company):
     Tax = Model.get('account.tax')
-    return {(t.name, t.start_date): t for t in Tax.find([
+    return {(t.code, t.sourcing, t.rate_type, t.start_date): t for t in Tax.find([
         ('authority.subdivision.code', '=', code_subdivision),
         ('company', '=', company.id),
         ])}
@@ -48,20 +50,20 @@ def update_taxes(code_subdivision, stream, from_date, account):
     tax_account, = get_tax_account(account, company)
 
     today = date.today()
-    far_future = today.replace(year=today.year + 100)
+    far_future = today.replace(year=today.year + 50)
 
     _seen = set()
-    def seen(name):
-        if name in _seen:
+    def seen(key):
+        if key in _seen:
             return True
-        _seen.add(name)
+        _seen.add(_TaxKey._make(key))
         return False
 
     f = TextIOWrapper(BytesIO(stream), encoding='utf-8-sig')
     records = []
     for row in _progress(list(csv.DictReader(f, fieldnames=_fieldnames))):
         authority = places[row['state']]
-        code_fips = row['jurisdiction_fips_code']
+        code_tax = row['jurisdiction_fips_code']
         place = places.get(row['jurisdiction_fips_code'])
         group = groups[row['jurisdiction_type']]
         start_date = date.fromisoformat(row['start_date'])
@@ -79,25 +81,42 @@ def update_taxes(code_subdivision, stream, from_date, account):
 
         for type_ in ['general_rate_intrastate', 'general_rate_interstate',
             'food_rate_intrastate', 'food_rate_interstate']:
-            name = '%s %s' % (code_fips, type_) #TODO: isn't there a better name?
             sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
             rate_type = 'general' if 'general' in type_ else 'food'
 
-            if not seen(name):
-                if (name, None) in taxes:
-                    parent = taxes[(name, None)]
-                else:
-                    parent = Tax(name=name)
+            name = [authority.subdivision.code, "uniform sales and use tax"]
+            match rate_type:
+                case 'general':
+                    name.append("on general goods or services")
+                case 'food':
+                    name.append("on food and drugs")
 
-                parent.code = code_fips
-                parent.place = place
-                parent.description = '%s tax' % place.name if place else code_fips
+            postfix = None
+            match sourcing:
+                case 'interstate':
+                    postfix = "foreign"
+                case 'intrastate':
+                    postfix = "domestic"
+
+            name = '—'.join([' '.join(name), postfix])
+
+            if not seen((code_tax, sourcing, rate_type, None)):
+
+                if (code_tax, sourcing, rate_type, None) in taxes:
+                    parent = taxes[(code_tax, sourcing, rate_type, None)]
+                else:
+                    parent = Tax(code=code_tax,
+                                 sourcing=sourcing,
+                                 rate_type=rate_type,
+                                 start_date=None)
+
+                parent.name = name
+                parent.description = '%s tax' % place.name if place else code_tax
                 parent.authority = authority
+                parent.place = place
                 parent.type = 'none'
                 parent.group = group
                 parent.company = company
-                parent.sourcing = sourcing
-                parent.rate_type = rate_type
                 parent.sequence = sequence
 
                 records.append(parent)
@@ -105,23 +124,23 @@ def update_taxes(code_subdivision, stream, from_date, account):
             if end_date and end_date <= from_date:
                 continue # import the parent at least for complete tax rules
 
-            if (name, start_date) in taxes:
-                record = taxes[(name, start_date)]
+            if (code_tax, sourcing, rate_type, start_date) in taxes:
+                record = taxes[(code_tax, sourcing, rate_type, start_date)]
             else:
-                record = Tax(name=name)
+                record = Tax(code=code_tax,
+                             sourcing=sourcing,
+                             rate_type=rate_type,
+                             start_date=start_date)
 
-            record.code = code_fips
+            record.name = name
             record.place = place
-            record.description = '%s tax (%s)' % (place.name if place else code_fips,
+            record.description = '%s tax (%s)' % (place.name if place else code_tax,
                                                   row[type_])
             record.authority = authority
             record.type = 'percentage'
             record.group = group
             record.company = company
             record.rate = Decimal(row[type_])
-            record.sourcing = sourcing
-            record.rate_type = rate_type
-            record.start_date = start_date
             record.end_date = None if end_date > far_future else end_date
             record.invoice_account = tax_account
             record.credit_note_account = tax_account
@@ -130,7 +149,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
             records.append(record)
 
     Tax.save(records)
-    return {(r.name, r.start_date): r for r in records}
+    return {(r.code, r.sourcing, r.rate_type, r.start_date): r for r in records}
 
 def update_taxes_parent(taxes):
     print("Update taxes parent", file=sys.stderr)
@@ -141,8 +160,8 @@ def update_taxes_parent(taxes):
         if record.type == 'none':
             continue
 
-        name, start_date = k
-        record.parent = taxes[(name, None)]
+        code, sourcing, rate_type, start_date = k
+        record.parent = taxes[(code, sourcing, rate_type, None)]
         records.append(record)
     Tax.save(records)
 

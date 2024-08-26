@@ -2,10 +2,12 @@
 
 <data>
     <xpath expr="/tree/field[@name='name']" position="before">
-        <field name="code" optional="1"/>
+        <field name="authority" optional="1"/>
+        <field string="Code" name="code" optional="1"/>
     </xpath>
     <xpath expr="/tree/field[@name='group']" position="after">
-        <field name="place" optional="1"/>
-        <field name="authority" optional="1"/>
+        <field name="place" expand="1" optional="1"/>
+        <field name="sourcing" optional="1"/>
+        <field name="rate_type" optional="1"/>
     </xpath>
 </data>
