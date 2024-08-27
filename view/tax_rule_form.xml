@@ -1,6 +1,13 @@
 <?xml version="1.0"?>
 
 <data>
+    <xpath expr="/form/field[@name='template_override']" position="replace">
+        <group col="-1" colspan="1" id="checkboxes">
+            <field name="template_override" xexpand="0" width="100"/>
+            <label name="authority_override"/>
+            <field name="authority_override" xexpand="0" width="100"/>
+        </group>
+    </xpath>
     <xpath expr="/form/field[@name='company']" position="after">
         <label name="place"/>
         <field name="place"/>

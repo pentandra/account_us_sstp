@@ -20,40 +20,35 @@ PARITY = [
     ]
 
 
-class Tax(metaclass=PoolMeta):
-    __name__ = 'account.tax'
-    _states = {
-        'readonly': Bool(Eval('authority', -1)),
-        }
+class TaxAuthorityMixin:
+
+    __slots__ = ()
+
     authority = fields.Many2One('census.place', "Authority",
-            domain=[('parent', '=', None)], states=_states,
-            help="The entity that administers this tax")
-    place = fields.Many2One('census.place', "Related Place",
+            domain=[('parent', '=', None)],
+            help="The tax authority that administers this entity")
+    authority_override = fields.Boolean('Override Definition',
+            help="Check to override tax authority definition",
             states={
-                'invisible': Bool(Eval('parent')),
-                'readonly': _states['readonly'],
+                'invisible': ~Bool(Eval('authority', -1)),
                 })
-    code = fields.Char("Jurisdiction Code", size=5, states={
-        'required': Bool(Eval('authority')),
-        'invisible': ~Eval('authority') | Bool(Eval('parent')),
-        'readonly': _states['readonly'],
-        })
-    sourcing = fields.Selection([
-        (None, ""),
-        ('intrastate', "In-state Destination"),
-        ('interstate', "Out-of-state Destination"),
-        ('origin', "Origin"),
-        ], "Sourcing", sort=False, states={
-            'readonly': _states['readonly'],
-            })
-    product = fields.Selection([
-        (None, ""),
-        ('general', "General Goods & Services"),
-        ('food', "Food & Drugs"),
-        ], "Product Class", sort=False, states={
-            'readonly': _states['readonly'],
-            })
-    del _states
+
+    @classmethod
+    def __setup__(cls):
+        super().__setup__()
+        for fname in dir(cls):
+            field = getattr(cls, fname)
+            if ((isinstance(field, fields.Field)
+                        and fname == 'authority_override')
+                    or not isinstance(field, fields.Field)
+                    or isinstance(field, fields.Function)):
+                continue
+            field.states['readonly'] = (
+                Bool(Eval('authority', -1)) & ~Eval('authority_override', False))
+
+    @classmethod
+    def default_authority_override(cls):
+        return False
 
     @classmethod
     def copy(cls, taxes, default=None):
@@ -63,6 +58,29 @@ class Tax(metaclass=PoolMeta):
             default = default.copy()
         default.setdefault('authority', None)
         return super().copy(taxes, default=default)
+
+
+class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
+    __name__ = 'account.tax'
+    place = fields.Many2One('census.place', "Related Place",
+            states={
+                'invisible': Bool(Eval('parent')),
+                })
+    code = fields.Char("Jurisdiction Code", size=5, states={
+        'required': Bool(Eval('authority')),
+        'invisible': ~Eval('authority') | Bool(Eval('parent')),
+        })
+    sourcing = fields.Selection([
+        (None, ""),
+        ('intrastate', "In-state Destination"),
+        ('interstate', "Out-of-state Destination"),
+        ('origin', "Origin"),
+        ], "Sourcing", sort=False)
+    product = fields.Selection([
+        (None, ""),
+        ('general', "General Goods & Services"),
+        ('food', "Food & Drugs"),
+        ], "Product Class", sort=False)
 
     @classmethod
     def get_amount(cls, taxes, names):
@@ -190,7 +208,7 @@ class TaxCodeContext(metaclass=PoolMeta):
         ], "Product Class", sort=False)
 
 
-class TaxBoundary(ModelView, ModelSQL, MatchMixin):
+class TaxBoundary(TaxAuthorityMixin, ModelView, ModelSQL, MatchMixin):
     "Tax Boundary"
     __name__ = 'account.tax.boundary'
     type = fields.Selection([
@@ -241,9 +259,6 @@ class TaxBoundary(ModelView, ModelSQL, MatchMixin):
     zipext_high = fields.Char("ZIP+4 Code High", size=4, states={
         'required': Eval('type') == '4',
         })
-    authority = fields.Many2One('census.place', "Authority",
-            domain=[('parent', '=', None)], required=True,
-            help="The entity that administers this tax boundary")
     company = fields.Many2One('company.company', "Company", required=True)
     rule = fields.Many2One('account.tax.rule', "Tax Rule",
             domain=[
@@ -263,12 +278,9 @@ class TaxBoundary(ModelView, ModelSQL, MatchMixin):
         return Transaction().context.get('company')
 
 
-class TaxCode(metaclass=PoolMeta):
-    "Tax Code"
+
+class TaxCode(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax.code'
-    authority = fields.Many2One('census.place', "Authority",
-            domain=[('parent', '=', None)],
-            help="The entity that administers this tax code")
 
 
 class TaxCodeLine(metaclass=PoolMeta):
@@ -306,17 +318,13 @@ class TaxCodeLine(metaclass=PoolMeta):
 
 
 class TaxLine(metaclass=PoolMeta):
-    "Tax Line"
     __name__ = 'account.tax.line'
     code = fields.Char("Reporting Code")
 
 
-class TaxRule(metaclass=PoolMeta):
+class TaxRule(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax.rule'
 
-    authority = fields.Many2One('census.place', "Authority",
-            domain=[('parent', '=', None)],
-            help="The entity that administers this tax")
     place = fields.Many2One('census.place', "Related Place")
 
     def get_rec_name(self, name):
@@ -325,13 +333,4 @@ class TaxRule(metaclass=PoolMeta):
                                     self.place.subdivision.code)
         else:
             return self.name
-
-    @classmethod
-    def copy(cls, rules, default=None):
-        if default is None:
-            default = {}
-        else:
-            default = default.copy()
-        default.setdefault('authority', None)
-        return super().copy(rules, default=default)
 
