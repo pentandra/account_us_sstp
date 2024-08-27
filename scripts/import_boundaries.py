@@ -185,7 +185,7 @@ class TaxCodeCollector:
 
         TaxCode = Model.get('account.tax.code')
         root = TaxCode(name="%s Streamlined Sales Tax Report" % self.authority.subdivision.name,
-                       code='SSTR-%s' % self.authority.subdivision.code,
+                       code='%s–SSTR' % self.authority.subdivision.code,
                        company=self.company,
                        authority=self.authority)
         root.save()
@@ -226,8 +226,23 @@ class TaxCodeCollector:
         total_tax.company = self.company
         total_tax.save()
 
+        state_tax_due = total_tax.childs.new()
+        state_tax_due.name = "State Tax Due"
+        state_tax_due.code = '1'
+        state_tax_due.authority = self.authority
+        state_tax_due.company = self.company
+        state_tax_due.save()
+
+        jurisdiction_detail = total_tax.childs.new()
+        jurisdiction_detail.name = "Jurisdiction Detail"
+        jurisdiction_detail.code = '2'
+        jurisdiction_detail.authority = self.authority
+        jurisdiction_detail.company = self.company
+        jurisdiction_detail.save()
+
         self.total_sales = total_sales
-        self.total_tax = total_tax
+        self.state_tax_due = state_tax_due
+        self.jurisdiction_detail = jurisdiction_detail
 
 
     def get_taxcode(self, code_tax):
@@ -246,11 +261,15 @@ class TaxCodeCollector:
         return taxcode
 
     def create_taxcode(self, code, name):
-        taxcode = self.total_tax.childs.new()
+        if code == self.authority.code_fips:
+            return self.state_tax_due
+
+        taxcode = self.jurisdiction_detail.childs.new()
         taxcode.name = name
         taxcode.code = code
         taxcode.authority = self.authority
         taxcode.company = self.company
+        taxcode.save()
         return taxcode
 
     @staticmethod
@@ -275,7 +294,6 @@ class TaxCodeCollector:
                 name = code_tax
 
             taxcode = self.create_taxcode(name, code_tax)
-            taxcode.save()
         return taxcode
 
 
@@ -395,7 +413,6 @@ def update_taxcode_taxes(codes, collector):
         peek = next(taxes)
         name = peek.place.name if peek.place else code
         taxcode = collector.create_taxcode(code, name)
-        taxcode.save()
         for tax in chain([peek], taxes):
             collector.create_lines(taxcode, tax)
         records.append(taxcode)
