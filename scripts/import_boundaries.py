@@ -115,7 +115,7 @@ class TaxRuleCollector:
                     ('type', '=', 'none'),
                     ('parent', '=', None),
                     ('childs', '=', None),
-                    ('product', '=', tax.product),
+                    ('product_class', '=', tax.product_class),
                     ])
             except ValueError:
                 sys.exit("Error could not find generic tax for %s" % tax.name)

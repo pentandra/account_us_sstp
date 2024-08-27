@@ -4,7 +4,7 @@
     <xpath expr="/form/field[@name='periods']" position="after">
         <label name="sourcing"/>
         <field name="sourcing"/>
-        <label name="product"/>
-        <field name="product"/>
+        <label name="product_class"/>
+        <field name="product_class"/>
     </xpath>
 </data>

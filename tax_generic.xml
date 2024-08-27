@@ -9,7 +9,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic state tax</field>
             <field name="group" ref="group_45"/>
             <field name="type">none</field>
-            <field name="product">general</field>
+            <field name="product_class">general</field>
             <field name="sequence">0</field>
             <field name="account" ref="account_us.root"/>
         </record>
@@ -18,7 +18,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic state tax</field>
             <field name="group" ref="group_45"/>
             <field name="type">none</field>
-            <field name="product">food</field>
+            <field name="product_class">food</field>
             <field name="sequence">0</field>
             <field name="account" ref="account_us.root"/>
         </record>
@@ -28,7 +28,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic county tax</field>
             <field name="group" ref="group_00"/>
             <field name="type">none</field>
-            <field name="product">general</field>
+            <field name="product_class">general</field>
             <field name="sequence">1</field>
             <field name="account" ref="account_us.root"/>
         </record>
@@ -37,7 +37,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic county tax</field>
             <field name="group" ref="group_00"/>
             <field name="type">none</field>
-            <field name="product">food</field>
+            <field name="product_class">food</field>
             <field name="sequence">1</field>
             <field name="account" ref="account_us.root"/>
         </record>
@@ -47,7 +47,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic city tax</field>
             <field name="group" ref="group_01"/>
             <field name="type">none</field>
-            <field name="product">general</field>
+            <field name="product_class">general</field>
             <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
@@ -56,7 +56,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic city tax</field>
             <field name="group" ref="group_01"/>
             <field name="type">none</field>
-            <field name="product">food</field>
+            <field name="product_class">food</field>
             <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
@@ -66,7 +66,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic town tax</field>
             <field name="group" ref="group_02"/>
             <field name="type">none</field>
-            <field name="product">general</field>
+            <field name="product_class">general</field>
             <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
@@ -75,7 +75,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic town tax</field>
             <field name="group" ref="group_02"/>
             <field name="type">none</field>
-            <field name="product">food</field>
+            <field name="product_class">food</field>
             <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
@@ -85,7 +85,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic special district tax</field>
             <field name="group" ref="group_63"/>
             <field name="type">none</field>
-            <field name="product">general</field>
+            <field name="product_class">general</field>
             <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>
@@ -94,7 +94,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="description">Generic special district tax</field>
             <field name="group" ref="group_63"/>
             <field name="type">none</field>
-            <field name="product">food</field>
+            <field name="product_class">food</field>
             <field name="sequence">2</field>
             <field name="account" ref="account_us.root"/>
         </record>

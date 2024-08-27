@@ -76,7 +76,7 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
         ('interstate', "Out-of-state Destination"),
         ('origin', "Origin"),
         ], "Sourcing", sort=False)
-    product = fields.Selection([
+    product_class = fields.Selection([
         (None, ""),
         ('general', "General Goods & Services"),
         ('food', "Food & Drugs"),
@@ -178,17 +178,16 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
     def _amount_where_tax(cls, tax_line, move_line, move, tax):
         context = Transaction().context
         sourcing = context.get('sourcing')
-        product = context.get('product')
+        product_class = context.get('product_class')
 
         where = Literal(True)
         if sourcing:
             where = where & (tax.sourcing == sourcing)
 
-        if product:
-            where = where & (tax.product == product)
+        if product_class:
+            where = where & (tax.product_class == product_class)
 
         return where
-
 
 
 class TaxCodeContext(metaclass=PoolMeta):
@@ -201,7 +200,7 @@ class TaxCodeContext(metaclass=PoolMeta):
         ('origin', "Origin"),
         ], "Sourcing", sort=False)
 
-    product = fields.Selection([
+    product_class = fields.Selection([
         (None, ""),
         ('general', "General Goods & Services"),
         ('food', "Food & Drugs"),
@@ -306,13 +305,13 @@ class TaxCodeLine(metaclass=PoolMeta):
 
         context = Transaction().context
         sourcing = context.get('sourcing')
-        product = context.get('product')
+        product_class = context.get('product_class')
 
         if sourcing:
             domain.append([('tax.sourcing', '=', sourcing)])
 
-        if product:
-            domain.append([('tax.product', '=', product)])
+        if product_class:
+            domain.append([('tax.product_class', '=', product_class)])
 
         return domain
 

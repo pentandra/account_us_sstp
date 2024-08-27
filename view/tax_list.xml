@@ -8,6 +8,6 @@
     <xpath expr="/tree/field[@name='group']" position="after">
         <field name="place" expand="1" optional="1"/>
         <field name="sourcing" optional="1"/>
-        <field name="product" optional="1"/>
+        <field name="product_class" optional="1"/>
     </xpath>
 </data>
