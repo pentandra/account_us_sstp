@@ -9,7 +9,7 @@ from trytond.model import (
         MatchMixin, ModelSQL, ModelView, fields)
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval
-from trytond.tools import cursor_dict
+from trytond.tools import cursor_dict, is_full_text, lstrip_wildcard
 from trytond.transaction import Transaction
 
 PARITY = [
@@ -81,6 +81,45 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
         ('general', "General Goods & Services"),
         ('food', "Food & Drugs"),
         ], "Product Class", sort=False)
+
+    def get_rec_name(self, name):
+        parts = []
+        if self.authority:
+            parts.append(self.authority.subdivision.code)
+            parts.append(self.code)
+
+        if self.place:
+            parts.append(self.place.name)
+        elif self.group:
+            parts.append(self.group.name)
+        else:
+            parts.append("Special")
+
+        if self.product_class:
+            parts.append(self.product_class.capitalize())
+
+        if self.sourcing == 'interstate':
+            parts.append("Foreign")
+        else:
+            parts.append("Domestic")
+
+        parts.append(self.name)
+        return '—'.join(parts)
+
+    @classmethod
+    def search_rec_name(cls, name, clause):
+        _, operator, operand, *extra = clause
+        if operator.startswith('!') or operator.startswith('not'):
+            bool_op = 'AND'
+        else:
+            bool_op = 'OR'
+        code_value = operand
+        if operator.endswith('like') and is_full_text(operand):
+            code_value = lstrip_wildcard(operand)
+        return [bool_op,
+            ('code', operator, code_value, *extra),
+            (cls._rec_name, operator, operand, *extra),
+            ]
 
     @classmethod
     def get_amount(cls, taxes, names):

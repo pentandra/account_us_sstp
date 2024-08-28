@@ -5,8 +5,8 @@ this repository contains the full copyright notices and license terms. -->
     <data depends="account_us">
 
         <record model="account.tax.template" id="tax_uniform_state_general">
-            <field name="name">Uniform state tax on general goods or services (to be replaced by an actual state tax)</field>
-            <field name="description">Generic state tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_45"/>
             <field name="type">none</field>
             <field name="product_class">general</field>
@@ -14,8 +14,8 @@ this repository contains the full copyright notices and license terms. -->
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_state_food">
-            <field name="name">Uniform state tax on food and drugs (to be replaced by an actual state tax)</field>
-            <field name="description">Generic state tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_45"/>
             <field name="type">none</field>
             <field name="product_class">food</field>
@@ -24,8 +24,8 @@ this repository contains the full copyright notices and license terms. -->
         </record>
 
         <record model="account.tax.template" id="tax_uniform_county_general">
-            <field name="name">Uniform county tax on general goods or services (to be replaced by an actual county tax)</field>
-            <field name="description">Generic county tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_00"/>
             <field name="type">none</field>
             <field name="product_class">general</field>
@@ -33,8 +33,8 @@ this repository contains the full copyright notices and license terms. -->
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_county_food">
-            <field name="name">Uniform county tax on food and drugs (to be replaced by an actual county tax)</field>
-            <field name="description">Generic county tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_00"/>
             <field name="type">none</field>
             <field name="product_class">food</field>
@@ -43,8 +43,8 @@ this repository contains the full copyright notices and license terms. -->
         </record>
 
         <record model="account.tax.template" id="tax_uniform_city_general">
-            <field name="name">Uniform city tax on general goods or services (to be replaced by an actual city tax)</field>
-            <field name="description">Generic city tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_01"/>
             <field name="type">none</field>
             <field name="product_class">general</field>
@@ -52,8 +52,8 @@ this repository contains the full copyright notices and license terms. -->
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_city_food">
-            <field name="name">Uniform city tax on food and drugs (to be replaced by an actual city tax)</field>
-            <field name="description">Generic city tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_01"/>
             <field name="type">none</field>
             <field name="product_class">food</field>
@@ -62,8 +62,8 @@ this repository contains the full copyright notices and license terms. -->
         </record>
 
         <record model="account.tax.template" id="tax_uniform_town_general">
-            <field name="name">Uniform town tax on general goods or services (to be replaced by an actual town tax)</field>
-            <field name="description">Generic town tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_02"/>
             <field name="type">none</field>
             <field name="product_class">general</field>
@@ -71,8 +71,8 @@ this repository contains the full copyright notices and license terms. -->
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_town_food">
-            <field name="name">Uniform town tax on food and drugs (to be replaced by an actual town tax)</field>
-            <field name="description">Generic town tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_02"/>
             <field name="type">none</field>
             <field name="product_class">food</field>
@@ -81,8 +81,8 @@ this repository contains the full copyright notices and license terms. -->
         </record>
 
         <record model="account.tax.template" id="tax_uniform_special_district_general">
-            <field name="name">Uniform special district tax on general goods or services (to be replaced by an actual special district tax)</field>
-            <field name="description">Generic special district tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_63"/>
             <field name="type">none</field>
             <field name="product_class">general</field>
@@ -90,8 +90,8 @@ this repository contains the full copyright notices and license terms. -->
             <field name="account" ref="account_us.root"/>
         </record>
         <record model="account.tax.template" id="tax_uniform_special_district_food">
-            <field name="name">Uniform special district tax on food and drugs (to be replaced by an actual special district tax)</field>
-            <field name="description">Generic special district tax</field>
+            <field name="name">Uniform sales and use tax</field>
+            <field name="description">Uniform sales and use tax</field>
             <field name="group" ref="group_63"/>
             <field name="type">none</field>
             <field name="product_class">food</field>

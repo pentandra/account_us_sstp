@@ -81,24 +81,9 @@ def update_taxes(code_subdivision, stream, from_date, account):
 
         for type_ in ['general_rate_intrastate', 'general_rate_interstate',
             'food_rate_intrastate', 'food_rate_interstate']:
+            name = "Uniform sales and use tax"
             sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
             product_class = 'general' if 'general' in type_ else 'food'
-
-            name = [authority.subdivision.code, "uniform sales and use tax"]
-            match product_class:
-                case 'general':
-                    name.append("on general goods or services")
-                case 'food':
-                    name.append("on food and drugs")
-
-            postfix = None
-            match sourcing:
-                case 'interstate':
-                    postfix = "foreign"
-                case 'intrastate':
-                    postfix = "domestic"
-
-            name = '—'.join([' '.join(name), postfix])
 
             if not seen((code_tax, sourcing, product_class, None)):
 
@@ -132,7 +117,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
                              product_class=product_class,
                              start_date=start_date)
 
-            record.name = "%s %s" % (name, format(Decimal(row[type_]), '.2%'))
+            record.name = "%s (%s)" % (name, format(Decimal(row[type_]), '.2%'))
             record.place = place
             record.description = '%s tax (%s)' % (place.name if place else code_tax,
                                                   row[type_])
