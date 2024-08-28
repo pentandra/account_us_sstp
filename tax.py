@@ -367,7 +367,7 @@ class TaxRule(TaxAuthorityMixin, metaclass=PoolMeta):
 
     def get_rec_name(self, name):
         if self.place:
-            return '%s (%s, %s)' % (self.name, self.place.name,
+            return '%s [%s, %s]' % (self.name, self.place.name,
                                     self.place.subdivision.code)
         else:
             return self.name
