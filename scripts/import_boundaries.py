@@ -71,7 +71,7 @@ class TaxRuleCollector:
         self.generic_taxes = {}
         self.company = company or get_company()
 
-    def get_rule(self, name, authority):
+    def get_rule(self, name, authority, kind='sale'):
         rule = self.rules.get(name)
         if not rule:
             TaxRule = Model.get('account.tax.rule')
@@ -80,6 +80,7 @@ class TaxRuleCollector:
                     ('authority', '=', authority),
                     ('company', '=', self.company),
                     ('name', '=', name),
+                    ('kind', '=', kind),
                     ])
             except ValueError:
                 return
@@ -138,6 +139,7 @@ class TaxRuleCollector:
 
             rule = TaxRule(
                     name=name,
+                    kind='sale',
                     company=self.company,
                     place=place,
                     authority=authority)
