@@ -37,7 +37,7 @@ major_version = int(major_version)
 minor_version = int(minor_version)
 name = 'trytond_account_us_sstp'
 
-requires = []
+requires = ['usaddress']
 for dep in info.get('depends', []):
     if not re.match(r'(ir|res)(\W|$)', dep):
         prefix = MODULE2PREFIX.get(dep, 'trytond')
