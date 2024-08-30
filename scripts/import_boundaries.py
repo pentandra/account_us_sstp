@@ -32,37 +32,6 @@ def clean_boundaries(code_subdivision, company=None):
     print('.', file=sys.stderr)
 
 
-def clean_tax_rules(code_subdivision, company=None):
-    sys.stderr.write('Cleaning tax rules')
-    sys.stderr.flush()
-
-    if not company:
-        company = get_company()
-
-    TaxRule = Model.get('account.tax.rule')
-    TaxRule._proxy.delete(
-        [c.id for c in TaxRule.find([
-            ('authority.subdivision.code', '=', code_subdivision),
-            ('company', '=', company),
-            ])], {})
-    print('.', file=sys.stderr)
-
-def clean_taxcodes(code_subdivision, company=None):
-    sys.stderr.write('Cleaning tax codes')
-    sys.stderr.flush()
-
-    if not company:
-        company = get_company()
-
-    TaxCode = Model.get('account.tax.code')
-    TaxCode._proxy.delete(
-        [c.id for c in TaxCode.find([
-            ('authority.subdivision.code', '=', code_subdivision),
-            ('company', '=', company),
-            ])], {})
-    print('.', file=sys.stderr)
-
-
 class TaxRuleCollector:
 
     def __init__(self, places, company=None):
@@ -187,61 +156,98 @@ class TaxCodeCollector:
                 self.names = {r['code_tax']: r['name'] for r in reader if r['code'] == code_subdivision}
 
         TaxCode = Model.get('account.tax.code')
-        root = TaxCode(name="%s Streamlined Sales Tax Report" % self.authority.subdivision.name,
-                       code='%s–SSTR' % self.authority.subdivision.code,
-                       company=self.company,
-                       authority=self.authority)
-        root.save()
+        root = self.get_taxcode(self.authority.subdivision.code)
+        if not root:
+            root = TaxCode(name="%s Streamlined Sales and Use Tax Report" % (
+                                        self.authority.subdivision.name),
+                           code=self.authority.subdivision.code,
+                           company=self.company,
+                           authority=self.authority)
+            root.save()
 
-        taxable_sales = root.childs.new()
-        taxable_sales.name = "Taxable Sales"
-        taxable_sales.code = 'A'
-        taxable_sales.authority = self.authority
-        taxable_sales.company = self.company
-        taxable_sales.save()
+        try:
+            taxable_sales, = root.childs.find([
+                ('name', '=', 'Taxable Sales'),
+                ])
+        except ValueError:
+            taxable_sales = root.childs.new()
+            taxable_sales.name = "Taxable Sales"
+            taxable_sales.code = 'A'
+            taxable_sales.authority = self.authority
+            taxable_sales.company = self.company
+            taxable_sales.save()
 
-        total_sales = taxable_sales.childs.new()
-        total_sales.name = "Total Sales"
-        total_sales.code = '1'
-        total_sales.authority = self.authority
-        total_sales.company = self.company
-        total_sales.save()
+        try:
+            total_sales, = taxable_sales.childs.find([
+                ('name', '=', 'Total Sales'),
+                ])
+        except ValueError:
+            total_sales = taxable_sales.childs.new()
+            total_sales.name = "Total Sales"
+            total_sales.code = '1'
+            total_sales.authority = self.authority
+            total_sales.company = self.company
+            total_sales.save()
 
-        exemptions = taxable_sales.childs.new()
-        exemptions.name = "Exemptions and Deductions"
-        exemptions.code = '2'
-        exemptions.authority = self.authority
-        exemptions.company = self.company
-        exemptions.save()
+        try:
+            exemptions, = taxable_sales.childs.find([
+                ('name', '=', 'Exemptions and Deductions'),
+                ])
+        except ValueError:
+            exemptions = taxable_sales.childs.new()
+            exemptions.name = "Exemptions and Deductions"
+            exemptions.code = '2'
+            exemptions.authority = self.authority
+            exemptions.company = self.company
+            exemptions.save()
 
-        for name in ['Agriculture', 'Direct Pay', 'Government Exemption Organizations',
-                     'Manufacturing', 'Resale', 'Other']:
-            subcode = exemptions.childs.new()
-            subcode.name = name
-            subcode.authority = self.authority
-            subcode.company = self.company
-            subcode.save()
+        for name in ['Agriculture', 'Direct Pay',
+                     'Government Exemption Organizations', 'Manufacturing',
+                     'Resale', 'Other']:
+            try:
+                subcode, = exemptions.childs.find([('name', '=', name)])
+            except ValueError:
+                subcode = exemptions.childs.new()
+                subcode.name = name
+                subcode.authority = self.authority
+                subcode.company = self.company
+                subcode.save()
 
-        total_tax = root.childs.new()
-        total_tax.name = "Total Tax Due"
-        total_tax.code = 'B'
-        total_tax.authority = self.authority
-        total_tax.company = self.company
-        total_tax.save()
+        try:
+            total_tax, = root.childs.find([
+                ('name', '=', 'Total Tax Due'),
+                ])
+        except ValueError:
+            total_tax = root.childs.new()
+            total_tax.name = "Total Tax Due"
+            total_tax.code = 'B'
+            total_tax.authority = self.authority
+            total_tax.company = self.company
+            total_tax.save()
 
-        state_tax_due = total_tax.childs.new()
-        state_tax_due.name = "State Tax Due"
-        state_tax_due.code = '1'
-        state_tax_due.authority = self.authority
-        state_tax_due.company = self.company
-        state_tax_due.save()
+        try:
+            state_tax_due, = total_tax.childs.find([
+                ('name', '=', 'State Tax Due'),
+                ])
+        except ValueError:
+            state_tax_due = total_tax.childs.new()
+            state_tax_due.name = "State Tax Due"
+            state_tax_due.code = '1'
+            state_tax_due.authority = self.authority
+            state_tax_due.company = self.company
+            state_tax_due.save()
 
-        jurisdiction_detail = total_tax.childs.new()
-        jurisdiction_detail.name = "Jurisdiction Detail"
-        jurisdiction_detail.code = '2'
-        jurisdiction_detail.authority = self.authority
-        jurisdiction_detail.company = self.company
-        jurisdiction_detail.save()
+        try:
+            jurisdiction_detail, = total_tax.childs.find([
+                ('name', '=', 'Jurisdiction Detail'),
+                ])
+        except ValueError:
+            jurisdiction_detail = total_tax.childs.new()
+            jurisdiction_detail.name = "Jurisdiction Detail"
+            jurisdiction_detail.code = '2'
+            jurisdiction_detail.authority = self.authority
+            jurisdiction_detail.company = self.company
+            jurisdiction_detail.save()
 
         self.total_sales = total_sales
         self.state_tax_due = state_tax_due
@@ -249,6 +255,9 @@ class TaxCodeCollector:
 
 
     def get_taxcode(self, code_tax):
+        if code_tax == self.authority.code_fips:
+            return self.state_tax_due
+
         taxcode = self.taxcodes.get(code_tax)
         if not taxcode:
             TaxCode = Model.get('account.tax.code')
@@ -263,16 +272,11 @@ class TaxCodeCollector:
             self.taxcodes[code_tax] = taxcode
         return taxcode
 
-    def create_taxcode(self, code, name):
-        if code == self.authority.code_fips:
-            return self.state_tax_due
-
+    def create_jurisdictional_taxcode(self, code):
         taxcode = self.jurisdiction_detail.childs.new()
-        taxcode.name = name
         taxcode.code = code
         taxcode.authority = self.authority
         taxcode.company = self.company
-        taxcode.save()
         return taxcode
 
     @staticmethod
@@ -291,12 +295,15 @@ class TaxCodeCollector:
 
         taxcode = self.get_taxcode(code_tax)
         if not taxcode:
-            name = self.names.get(code_tax)
-            if not name:
-                print('Could not find jurisdiction name for %s' % code_tax)
-                name = code_tax
+            taxcode = self.create_jurisdictional_taxcode(code_tax)
 
-            taxcode = self.create_taxcode(name, code_tax)
+            if self.names.get(code_tax):
+                taxcode.name = self.names[code_tax]
+            else:
+                print('Could not find jurisdiction name for %s' % code_tax)
+                taxcode.name = code_tax
+
+            taxcode.save()
         return taxcode
 
 
@@ -386,23 +393,26 @@ def import_boundaries(code_subdivision, boundaries, from_date, company=None):
     print('.', file=sys.stderr)
     return _seen, code_collector
 
-def update_taxcode_taxes(codes, collector):
+def update_taxcode_taxes(taxcodes, collector):
     sys.stderr.write('Updating taxcode taxes')
     sys.stderr.flush()
     TaxCode = Model.get('account.tax.code')
     TaxRule = Model.get('account.tax.rule')
 
+    _codesorter = attrgetter('code')
     _tax_bases = set()
     _indie_codes = set()
     records = []
-    for code, rules in _progress(list(codes.items())):
-        if isinstance(code, TaxCode):
+    for taxcode, rules in _progress(list(taxcodes.items())):
+        if isinstance(taxcode, TaxCode):
             taxes = {tax for rule in rules for line in rule.lines for tax in line.tax.childs}
             for tax in sorted(taxes, key=_codesorter):
-                TaxCodeCollector.create_lines(code, tax)
-            records.append(code)
-        elif isinstance(code, TaxRule):
-            taxes = [tax for line in code.lines for tax in line.tax.childs]
+                # update name?
+                if not tax in [line.tax for line in taxcode.lines]:
+                    TaxCodeCollector.create_lines(taxcode, tax)
+            records.append(taxcode)
+        elif isinstance(taxcode, TaxRule):
+            taxes = [tax for line in taxcode.lines for tax in line.tax.childs]
             _indie_codes.update(taxes)
         else:
             taxes = []
@@ -412,17 +422,23 @@ def update_taxcode_taxes(codes, collector):
                 _tax_bases.add(tax)
 
     indie_codes = sorted(_indie_codes, key=_codesorter)
-    for code, taxes in groupby(indie_codes, key=_codesorter):
-        peek = next(taxes)
-        name = peek.place.name if peek.place else code
-        taxcode = collector.create_taxcode(code, name)
-        for tax in chain([peek], taxes):
-            collector.create_lines(taxcode, tax)
+    for code_tax, iter_tax in groupby(indie_codes, key=_codesorter):
+        taxcode = collector.get_taxcode(code_tax)
+        taxes = list(iter_tax)
+        if not taxcode:
+            name = taxes[0].place.name if hasattr(taxes[0], 'place') else code_tax
+            taxcode = collector.create_jurisdictional_taxcode(code_tax)
+            taxcode.name = name
+            taxcode.save() # initial save
+        for tax in taxes:
+            if not tax in [line.tax for line in taxcode.lines]:
+                collector.create_lines(taxcode, tax)
         records.append(taxcode)
 
     total_sales = collector.total_sales
     for tax in _tax_bases:
-        collector.create_lines(total_sales, tax, amount='base')
+        if not tax in [line.tax for line in total_sales.lines]:
+            collector.create_lines(total_sales, tax, amount='base')
     records.append(total_sales)
 
     TaxCode.save(records)
@@ -430,7 +446,6 @@ def update_taxcode_taxes(codes, collector):
 
 _fips_indices = itemgetter('fips_state_indicator', 'fips_county_code', 'fips_place_code')
 _special_code_index = itemgetter(1)
-_codesorter = attrgetter('code')
 
 
 _fieldnames = ['record_type', 'start_date', 'end_date',
@@ -455,7 +470,6 @@ def do_import(args):
         from_date = date.min if args.all else args.from_date
 
         clean_boundaries(code_subdivision)
-        clean_taxcodes(code_subdivision)
         taxcodes, collector = import_boundaries(
                 code_subdivision, fetch(code.upper(), _base), from_date)
         update_taxcode_taxes(taxcodes, collector)
