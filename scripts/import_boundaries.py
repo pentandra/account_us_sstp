@@ -25,11 +25,12 @@ def clean_boundaries(code_subdivision, company=None):
         company = get_company()
 
     Boundary = Model.get('account.tax.boundary')
-    Boundary._proxy.delete([], {})
-        #[c.id for c in Boundary.find([
-        #    ('authority.subdivision.code', '=', code_subdivision),
-        #    ])], {})
+    Boundary._proxy.clean([
+        ('authority.subdivision.code', '=', code_subdivision),
+        ('company', '=', company),
+        ], {})
     print('.', file=sys.stderr)
+
 
 def clean_tax_rules(code_subdivision, company=None):
     sys.stderr.write('Cleaning tax rules')

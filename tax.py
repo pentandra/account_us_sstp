@@ -9,6 +9,7 @@ from trytond.model import (
         MatchMixin, ModelSQL, ModelView, fields)
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval
+from trytond.rpc import RPC
 from trytond.tools import cursor_dict, is_full_text, lstrip_wildcard
 from trytond.transaction import Transaction
 
@@ -319,10 +320,27 @@ class TaxBoundary(TaxAuthorityMixin, ModelView, ModelSQL, MatchMixin):
                 ],
             ondelete='RESTRICT')
 
+    @classmethod
+    def __setup__(cls):
+        super().__setup__()
+        cls.__rpc__.update(
+            clean=RPC(
+                readonly=False, fresh_session=True))
+
     @staticmethod
     def default_company():
         return Transaction().context.get('company')
 
+    @classmethod
+    def clean(cls, domain=None):
+        table = cls.__table__()
+        cursor = Transaction().connection.cursor()
+        if domain:
+            query = cls.search(domain, query=True)
+            where = table.id.in_(query)
+        else:
+            where = None
+        cursor.execute(*table.delete(where=where))
 
 
 class TaxCode(TaxAuthorityMixin, metaclass=PoolMeta):
