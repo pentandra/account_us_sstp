@@ -21,9 +21,7 @@ PARITY = [
 
 
 class TaxAuthorityMixin:
-
     __slots__ = ()
-
     authority = fields.Many2One('census.place', "Authority",
             domain=[('parent', '=', None)],
             help="The tax authority that administers this entity")
@@ -45,6 +43,16 @@ class TaxAuthorityMixin:
                 continue
             field.states['readonly'] = (
                 Bool(Eval('authority', -1)) & ~Eval('authority_override', False))
+
+        if hasattr(cls, 'parent') and hasattr(cls, 'childs'):
+            cls.parent.domain = [
+                ('authority', '=', Eval('authority', -1)),
+                cls.parent.domain or []]
+            cls.parent.depends.update({'authority'})
+            cls.childs.domain = [
+                ('authority', '=', Eval('authority', -1)),
+                cls.childs.domain or []]
+            cls.childs.depends.update({'authority'})
 
     @classmethod
     def default_authority_override(cls):
@@ -322,7 +330,6 @@ class TaxCode(TaxAuthorityMixin, metaclass=PoolMeta):
 
 
 class TaxCodeLine(metaclass=PoolMeta):
-    "Tax Code Line"
     __name__ = 'account.tax.code.line'
 
     @classmethod
