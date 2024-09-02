@@ -53,12 +53,6 @@ setup(name=name,
     author='Pentandra',
     author_email='issues@pentandra.com',
     url='https://github.com/pentandra/account_us_sstp',
-    project_urls={
-        "Bug Tracker": 'https://bugs.tryton.org/',
-        "Documentation": 'https://docs.tryton.org/projects/modules-account-us-sstp',
-        "Forum": 'https://www.tryton.org/forum',
-        "Source Code": 'https://hg.tryton.org/modules/account_us_sstp',
-        },
     keywords='tryton account us sstp tax',
     package_dir={'trytond.modules.account_us_sstp': '.'},
     packages=(

@@ -1,29 +1,33 @@
 #!/usr/bin/env python3
 
 import csv
-import os
 import sys
 from argparse import ArgumentParser
 from collections import namedtuple
 from datetime import date
 from decimal import Decimal
 from io import BytesIO, TextIOWrapper
-
-from common import _progress, fetch, get_company, get_places
 from proteus import Model, config
 
-_TaxKey = namedtuple('_TaxKey', ['code', 'sourcing', 'product_class', 'start_date'])
+from common import _progress, fetch, get_company, get_places
+
+_TaxKey = namedtuple('_TaxKey',
+                     ['code', 'sourcing', 'product_class', 'start_date'])
+
 
 def get_taxes(code_subdivision, company):
     Tax = Model.get('account.tax')
-    return {(t.code, t.sourcing, t.product_class, t.start_date): t for t in Tax.find([
-        ('authority.subdivision.code', '=', code_subdivision),
-        ('company', '=', company.id),
-        ])}
+    return {(t.code, t.sourcing, t.product_class, t.start_date): t
+            for t in Tax.find([
+                ('authority.subdivision.code', '=', code_subdivision),
+                ('company', '=', company.id),
+                ])}
+
 
 def get_groups():
     TaxGroup = Model.get('account.tax.group')
     return {g.code: g for g in TaxGroup.find([])}
+
 
 def get_tax_account(name, company):
     Account = Model.get('account.account')
@@ -36,8 +40,10 @@ def get_tax_account(name, company):
          ],
         ], limit=1)
 
+
 def update_taxes(code_subdivision, stream, from_date, account):
-    print('Importing rates active as of %s' % from_date.isoformat(), file=sys.stderr)
+    print('Importing rates active as of %s' % (
+        from_date.isoformat()), file=sys.stderr)
     Tax = Model.get('account.tax')
 
     places = get_places(code_subdivision)
@@ -50,6 +56,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
     far_future = today.replace(year=today.year + 50)
 
     _seen = set()
+
     def seen(key):
         if key in _seen:
             return True
@@ -77,7 +84,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
                     sequence = 2
 
         for type_ in ['general_rate_intrastate', 'general_rate_interstate',
-            'food_rate_intrastate', 'food_rate_interstate']:
+                      'food_rate_intrastate', 'food_rate_interstate']:
             name = "Uniform sales and use tax"
             sourcing = 'intrastate' if 'intrastate' in type_ else 'interstate'
             product_class = 'general' if 'general' in type_ else 'food'
@@ -93,7 +100,8 @@ def update_taxes(code_subdivision, stream, from_date, account):
                                  start_date=None)
 
                 parent.name = name
-                parent.description = '%s tax' % place.name if place else code_tax
+                parent.description = '%s tax' % (
+                        place.name if place else code_tax)
                 parent.authority = authority
                 parent.place = place
                 parent.type = 'none'
@@ -104,7 +112,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
                 records.append(parent)
 
             if end_date and end_date <= from_date:
-                continue # import the parent at least for complete tax rules
+                continue  # import the parent at least for complete tax rules
 
             if (code_tax, sourcing, product_class, start_date) in taxes:
                 record = taxes[(code_tax, sourcing, product_class, start_date)]
@@ -114,10 +122,12 @@ def update_taxes(code_subdivision, stream, from_date, account):
                              product_class=product_class,
                              start_date=start_date)
 
-            record.name = "%s (%s)" % (name, format(Decimal(row[type_]), '.2%'))
+            record.name = "%s (%s)" % (
+                    name, format(Decimal(row[type_]), '.2%'))
             record.place = place
-            record.description = '%s tax (%s)' % (place.name if place else code_tax,
-                                                  format(Decimal(row[type_]), '.2%'))
+            record.description = '%s tax (%s)' % (
+                    place.name if place else code_tax,
+                    format(Decimal(row[type_]), '.2%'))
             record.authority = authority
             record.type = 'percentage'
             record.group = group
@@ -131,7 +141,9 @@ def update_taxes(code_subdivision, stream, from_date, account):
             records.append(record)
 
     Tax.save(records)
-    return {(r.code, r.sourcing, r.product_class, r.start_date): r for r in records}
+    return {(r.code, r.sourcing, r.product_class, r.start_date): r
+            for r in records}
+
 
 def update_taxes_parent(taxes):
     print("Update taxes parent", file=sys.stderr)
@@ -147,11 +159,13 @@ def update_taxes_parent(taxes):
         records.append(record)
     Tax.save(records)
 
+
 _fieldnames = ['state', 'jurisdiction_type', 'jurisdiction_fips_code',
     'general_rate_intrastate', 'general_rate_interstate',
     'food_rate_intrastate', 'food_rate_interstate', 'start_date', 'end_date']
 
 _base = 'https://www.streamlinedsalestax.org/ratesandboundry/Rates/'
+
 
 def main(database, args, config_file=None):
     config.set_trytond(database, config_file=config_file)
@@ -167,7 +181,8 @@ def do_import(args):
             account = args.account
         from_date = date.min if args.all else args.from_date
         code_subdivision = 'US-%s' % code.upper()
-        taxes = update_taxes(code_subdivision, fetch(code.upper(), _base), from_date, account)
+        taxes = update_taxes(code_subdivision,
+                             fetch(code.upper(), _base), from_date, account)
         update_taxes_parent(taxes)
 
 
@@ -176,9 +191,10 @@ def run():
     parser.add_argument('-d', '--database', dest='database', required=True)
     parser.add_argument('-c', '--config', dest='config_file',
         help='the trytond config file')
-    parser.add_argument('-l', '--liability-account', dest='account', default='2230-',
-        help='the code of the invoice and credit note account related to the taxes '
-        '(defaults to 2230-{code}, see the account_us module)')
+    parser.add_argument('-l', '--liability-account', dest='account',
+        default='2230-', help="the code of the invoice and credit note "
+        "account related to the taxes (defaults to 2230-{code}, see the "
+        "account_us module)")
     parser.add_argument('-f', '--from', dest='from_date',
         default=date.today().isoformat(), type=date.fromisoformat,
         help='import all taxes active from the given date YYYY-MM-DD '

@@ -1,5 +1,3 @@
-import re
-
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 
@@ -15,7 +13,6 @@ class SaleLine(BoundaryLocatorMixin, metaclass=PoolMeta):
     def compute_taxes(self, party):
         pool = Pool()
         Date = pool.get('ir.date')
-        Boundary = pool.get('account.tax.boundary')
 
         sale_date = self.sale_date or Date.today()
 

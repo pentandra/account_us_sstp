@@ -5,7 +5,7 @@ from sql.aggregate import Sum
 from sql.conditionals import Case
 
 from trytond import backend
-from trytond.model import MatchMixin, ModelSQL, ModelView, fields
+from trytond.model import ModelSQL, ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval
 from trytond.rpc import RPC
@@ -37,12 +37,13 @@ class TaxAuthorityMixin:
         for fname in dir(cls):
             field = getattr(cls, fname)
             if ((isinstance(field, fields.Field)
-                        and fname == 'authority_override')
+                    and fname == 'authority_override')
                     or not isinstance(field, fields.Field)
                     or isinstance(field, fields.Function)):
                 continue
             field.states['readonly'] = (
-                Bool(Eval('authority', -1)) & ~Eval('authority_override', False))
+                Bool(Eval('authority', -1)) & ~Eval('authority_override',
+                                                    False))
 
         if hasattr(cls, 'parent') and hasattr(cls, 'childs'):
             cls.parent.domain = [
@@ -176,7 +177,7 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
                 ]:
             if name not in names:
                 continue
-            if backend.name == 'postgresql': # FIXME
+            if backend.name == 'postgresql':  # FIXME
                 columns.append(Sum(amount, filter_=clause).as_(name))
             else:
                 columns.append(Sum(Case([clause, amount])).as_(name))
@@ -254,7 +255,7 @@ class TaxCodeContext(metaclass=PoolMeta):
         ], "Product Class", sort=False)
 
 
-class TaxBoundary(TaxAuthorityMixin, ModelView, ModelSQL, MatchMixin):
+class TaxBoundary(TaxAuthorityMixin, ModelView, ModelSQL):
     "Tax Boundary"
     __name__ = 'account.tax.boundary'
     type = fields.Selection([
@@ -271,8 +272,8 @@ class TaxBoundary(TaxAuthorityMixin, ModelView, ModelSQL, MatchMixin):
         'required': Eval('type') == 'A',
         }, help="High end of PO Box or street address numbers")
     address_parity = fields.Selection(PARITY, "Odd/Even Indicator",
-        help="Indicates whether the given range of address(es) is odd or even. "
-            "For PO Boxes this field should be blank.")
+        help="Indicates whether the given range of address(es) is "
+        "odd or even. For PO Boxes this field should be blank.")
     street_pre = fields.Char("Street Predirectional", size=2)
     street = fields.Char("Street Name", size=20, states={
         'required': Eval('type') == 'A',
@@ -395,4 +396,3 @@ class TaxRule(TaxAuthorityMixin, metaclass=PoolMeta):
                                     self.place.subdivision.code)
         else:
             return self.name
-

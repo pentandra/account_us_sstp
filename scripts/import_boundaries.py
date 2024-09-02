@@ -3,18 +3,17 @@
 # this repository contains the full copyright notices and license terms.
 
 import csv
-from collections import defaultdict
-from datetime import date
 import os
 import sys
-
 from argparse import ArgumentParser
+from collections import defaultdict
+from datetime import date
 from io import BytesIO, TextIOWrapper
 from itertools import batched, chain, groupby
 from operator import attrgetter, itemgetter
 from proteus import Model, config
 
-from common import fetch, get_company, get_places, _progress
+from common import _progress, fetch, get_company, get_places
 
 
 def clean_boundaries(code_subdivision, company=None):
@@ -96,7 +95,8 @@ class TaxRuleCollector:
     def collect(self, row):
         authority = self.places[row['fips_state_code']]
         fips_codes = _fips_indices(row)
-        special_codes = map(_special_code_index, batched(row['special_districts'], n=3))
+        special_codes = map(_special_code_index,
+                            batched(row['special_districts'], n=3))
         codes = tuple(filter(None, chain(fips_codes, special_codes)))
         name = '%s Retail' % '–'.join(codes)
 
@@ -135,6 +135,7 @@ class TaxRuleCollector:
             rule.save()
         return rule
 
+
 class TaxCodeCollector:
 
     def __init__(self, code_subdivision, places, company=None):
@@ -145,15 +146,19 @@ class TaxCodeCollector:
         authority = None
         try:
             authority, = [v for v in places.values() if not v.parent]
-        except:
-            sys.exit("\nError could not find a state authority for the code: %s" % code_subdivision)
+        except ValueError:
+            sys.exit(
+                "\nError could not find a state authority for the code: %s" % (
+                    code_subdivision))
         self.authority = authority
 
         codenames = os.path.join(os.path.dirname(__file__), 'codenames.csv')
         if os.path.isfile(codenames):
             with open(codenames, newline='') as csvfile:
-                reader = csv.DictReader(csvfile, fieldnames=['code', 'code_tax', 'name'])
-                self.names = {r['code_tax']: r['name'] for r in reader if r['code'] == code_subdivision}
+                reader = csv.DictReader(
+                        csvfile, fieldnames=['code', 'code_tax', 'name'])
+                self.names = {r['code_tax']: r['name']
+                              for r in reader if r['code'] == code_subdivision}
 
         TaxCode = Model.get('account.tax.code')
         root = self.get_taxcode(self.authority.subdivision.code)
@@ -253,7 +258,6 @@ class TaxCodeCollector:
         self.state_tax_due = state_tax_due
         self.jurisdiction_detail = jurisdiction_detail
 
-
     def get_taxcode(self, code_tax):
         if code_tax == self.authority.code_fips:
             return self.state_tax_due
@@ -281,12 +285,12 @@ class TaxCodeCollector:
 
     @staticmethod
     def create_lines(code, tax, amount='tax'):
-        for op, type_ in zip(['+', '-'], ['invoice', 'credit']):
+        for op, account_type in zip(['+', '-'], ['invoice', 'credit']):
             line = code.lines.new()
             line.operator = op
             line.tax = tax
             line.amount = amount
-            line.type = type_
+            line.type = account_type
 
     def collect(self, row):
         code_tax = row['composite_ser_code']
@@ -308,7 +312,8 @@ class TaxCodeCollector:
 
 
 def import_boundaries(code_subdivision, boundaries, from_date, company=None):
-    sys.stderr.write('Importing boundaries active as of %s' % from_date.isoformat())
+    sys.stderr.write(
+            "Importing boundaries active as of %s" % from_date.isoformat())
     sys.stderr.flush()
 
     Boundary = Model.get('account.tax.boundary')
@@ -317,10 +322,12 @@ def import_boundaries(code_subdivision, boundaries, from_date, company=None):
     if not company:
         company = get_company()
 
-    code_collector = TaxCodeCollector(code_subdivision, places, company=company)
+    code_collector = TaxCodeCollector(
+            code_subdivision, places, company=company)
     rule_collector = TaxRuleCollector(places, company=company)
 
     _seen = defaultdict(set)
+
     def seen(rule, code=None):
         if code:
             if _seen.get(code) and rule in _seen[code]:
@@ -385,13 +392,15 @@ def import_boundaries(code_subdivision, boundaries, from_date, company=None):
             record.zipcode = row['zipcode']
             record.zipext = row['plus4']
         else:
-            print("\nUnknown record type %s: %s" % (record_type, row))
+            print("\nUnknown record type '%s' on line %s" % (
+                record_type, reader.line_num))
 
         records.append(record)
 
     Boundary.save(records)
     print('.', file=sys.stderr)
     return _seen, code_collector
+
 
 def update_taxcode_taxes(taxcodes, collector):
     sys.stderr.write('Updating taxcode taxes')
@@ -405,10 +414,11 @@ def update_taxcode_taxes(taxcodes, collector):
     records = []
     for taxcode, rules in _progress(list(taxcodes.items())):
         if isinstance(taxcode, TaxCode):
-            taxes = {tax for rule in rules for line in rule.lines for tax in line.tax.childs}
+            taxes = {tax for rule in rules
+                     for line in rule.lines for tax in line.tax.childs}
             for tax in sorted(taxes, key=_codesorter):
                 # update name?
-                if not tax in [line.tax for line in taxcode.lines]:
+                if tax not in [line.tax for line in taxcode.lines]:
                     TaxCodeCollector.create_lines(taxcode, tax)
             records.append(taxcode)
         elif isinstance(taxcode, TaxRule):
@@ -426,37 +436,44 @@ def update_taxcode_taxes(taxcodes, collector):
         taxcode = collector.get_taxcode(code_tax)
         taxes = list(iter_tax)
         if not taxcode:
-            name = taxes[0].place.name if hasattr(taxes[0], 'place') else code_tax
+            name = taxes[0].place.name if (
+                    hasattr(taxes[0], 'place')) else code_tax
             taxcode = collector.create_jurisdictional_taxcode(code_tax)
             taxcode.name = name
-            taxcode.save() # initial save
+            taxcode.save()  # initial save
         for tax in taxes:
-            if not tax in [line.tax for line in taxcode.lines]:
+            if tax not in [line.tax for line in taxcode.lines]:
                 collector.create_lines(taxcode, tax)
         records.append(taxcode)
 
     total_sales = collector.total_sales
     for tax in _tax_bases:
-        if not tax in [line.tax for line in total_sales.lines]:
+        if tax not in [line.tax for line in total_sales.lines]:
             collector.create_lines(total_sales, tax, amount='base')
     records.append(total_sales)
 
     TaxCode.save(records)
     print('.', file=sys.stderr)
 
-_fips_indices = itemgetter('fips_state_indicator', 'fips_county_code', 'fips_place_code')
+
+_fips_indices = itemgetter(
+        'fips_state_indicator', 'fips_county_code', 'fips_place_code')
 _special_code_index = itemgetter(1)
 
 
 _fieldnames = ['record_type', 'start_date', 'end_date',
-    'address_range_low', 'address_range_high', 'odd_even_indicator', 'street_pre_directional',
-    'street_name', 'street_suffix_abbr', 'street_post_directional', 'address_secondary_abbr',
-    'address_secondary_low', 'address_secondary_high', 'address_secondary_odd_even',
-    'city_name', 'zipcode', 'plus4', 'zipcode_low', 'zipext_low', 'zipcode_high', 'zipext_high',
-    'composite_ser_code', 'fips_state_code', 'fips_state_indicator','fips_county_code',
-    'fips_place_code', 'fips_place_class_code', 'longitude', 'latitude']
+    'address_range_low', 'address_range_high', 'odd_even_indicator',
+    'street_pre_directional', 'street_name', 'street_suffix_abbr',
+    'street_post_directional', 'address_secondary_abbr',
+    'address_secondary_low', 'address_secondary_high',
+    'address_secondary_odd_even', 'city_name', 'zipcode', 'plus4',
+    'zipcode_low', 'zipext_low', 'zipcode_high', 'zipext_high',
+    'composite_ser_code', 'fips_state_code', 'fips_state_indicator',
+    'fips_county_code', 'fips_place_code', 'fips_place_class_code',
+    'longitude', 'latitude']
 
 _base = 'https://www.streamlinedsalestax.org/ratesandboundry/Boundary/'
+
 
 def main(database, args, config_file=None):
     config.set_trytond(database, config_file=config_file)
@@ -475,8 +492,6 @@ def do_import(args):
         update_taxcode_taxes(taxcodes, collector)
 
 
-
-
 def run():
     parser = ArgumentParser()
     parser.add_argument('-d', '--database', dest='database', required=True)
@@ -484,8 +499,8 @@ def run():
         help='the trytond config file')
     parser.add_argument('-f', '--from', dest='from_date',
         default=date.today().isoformat(), type=date.fromisoformat,
-        help='import all boundary records active from the given date YYYY-MM-DD '
-             '(defaults to %s)' % date.today().isoformat())
+        help="import all boundary records active from the given date "
+        "YYYY-MM-DD (defaults to %s)" % date.today().isoformat())
     parser.add_argument('--all', action='store_true',
         help='import all available boundary records (overrides --from)')
     parser.add_argument('codes', nargs='+')

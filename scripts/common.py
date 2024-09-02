@@ -17,7 +17,7 @@ except ImportError:
     ProgressBar = None
 
 try:
-    from proteus import Model, config
+    from proteus import Model
 except ImportError:
     prog = os.path.basename(sys.argv[0])
     sys.exit("proteus must be installed to use %s" % prog)
@@ -25,6 +25,7 @@ except ImportError:
 if not sys.version_info >= (3, 12):
     prog = os.path.basename(sys.argv[0])
     sys.exit("%s must be run using Python 3.12 or higher" % prog)
+
 
 class LinksExtractor(HTMLParser):
     def __init__(self):
@@ -40,6 +41,7 @@ class LinksExtractor(HTMLParser):
     def get_links(self):
         return self.links
 
+
 def _progress(iterable):
     if ProgressBar:
         pbar = ProgressBar(
@@ -48,9 +50,11 @@ def _progress(iterable):
         pbar = iter
     return pbar(iterable)
 
+
 def _remove_forbidden_chars(name):
     from trytond.tools import remove_forbidden_chars
     return remove_forbidden_chars(name)
+
 
 def fetch(code, base):
     sys.stderr.write('Fetching')
@@ -63,7 +67,8 @@ def fetch(code, base):
     parser.feed(TextIOWrapper(responce, encoding='utf-8').read())
     parser.close()
 
-    files = {os.path.basename(a)[:2]: urljoin(base, a) for a in parser.get_links()}
+    files = {os.path.basename(a)[:2]: urljoin(base, a)
+             for a in parser.get_links()}
 
     try:
         responce = urlopen(files[code])
@@ -80,12 +85,15 @@ def fetch(code, base):
     print('.', file=sys.stderr)
     return data
 
+
 def get_places(code_subdivision):
     Place = Model.get('census.place')
-    return {p.code_fips: p for p in Place.find([('subdivision.code', '=', code_subdivision)])}
+    return {p.code_fips: p for p in Place.find([
+        ('subdivision.code', '=', code_subdivision),
+        ])}
+
 
 def get_company():
     Company = Model.get('company.company')
     company, = Company.find()
     return company
-

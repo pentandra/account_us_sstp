@@ -10,6 +10,7 @@ from trytond.pool import Pool, PoolMeta
 
 logger = logging.getLogger(__name__)
 
+
 class BoundaryLocatorMixin:
     __slots__ = ()
 
@@ -33,7 +34,7 @@ class BoundaryLocatorMixin:
         if address_type == 'Street Address':
             address_number = address_tagged.get('AddressNumber')
             # Secondary address doesn't seem to currently be used by any states
-            #secondary_number = address_tagged.get('OccupancyIdentifier')
+            # secondary_number = address_tagged.get('OccupancyIdentifier')
 
             address_domain.append([
                 ('address_low', '<=', address_number),
@@ -50,7 +51,9 @@ class BoundaryLocatorMixin:
                                ('StreetNamePostDirectional', 'street_post'),
                                ('StreetNamePostType', 'street_suffix')]:
                 if address_tagged.get(tag):
-                    address_domain.append((field, 'ilike', address_tagged[tag]))
+                    address_domain.append([
+                            (field, 'ilike', address_tagged[tag]),
+                            ])
                 else:
                     address_domain.append((field, 'in', [None, '']))
 
@@ -110,8 +113,9 @@ class BoundaryLocatorMixin:
             for boundary in boundaries:
                 if boundary.type == record_type:
                     logger.debug(
-                        "Returning a '%s' tax boundary %s for %s (%s boundaries found)",
-                         record_type, boundary.id, address.rec_name, len(boundaries))
+                        "Returning a '%s' tax boundary %s for %s "
+                        "(%s boundaries found)", record_type, boundary.id,
+                        address.rec_name, len(boundaries))
                     return boundary
 
 
