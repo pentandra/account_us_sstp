@@ -5,8 +5,7 @@ from sql.aggregate import Sum
 from sql.conditionals import Case
 
 from trytond import backend
-from trytond.model import (
-        MatchMixin, ModelSQL, ModelView, fields)
+from trytond.model import MatchMixin, ModelSQL, ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval
 from trytond.rpc import RPC

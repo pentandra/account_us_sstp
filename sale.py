@@ -1,8 +1,10 @@
 import re
+
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 
 from .account import BoundaryLocatorMixin
+
 
 class SaleLine(BoundaryLocatorMixin, metaclass=PoolMeta):
     "Sale Line"

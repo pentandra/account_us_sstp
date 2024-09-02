@@ -1,16 +1,15 @@
 import os
 import sys
-
-from html.parser import HTMLParser
 import zipfile
+from html.parser import HTMLParser
 from io import BytesIO, TextIOWrapper
 
 try:
     from urllib.error import HTTPError
-    from urllib.request import urlopen
     from urllib.parse import urljoin
+    from urllib.request import urlopen
 except ImportError:
-    from urllib2 import urlopen, HTTPError
+    from urllib2 import HTTPError, urlopen
 
 try:
     from progressbar import ETA, Bar, ProgressBar, SimpleProgress

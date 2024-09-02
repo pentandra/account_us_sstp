@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
-# This file is part of Tryton.  The COPYRIGHT file at the top level of
-# this repository contains the full copyright notices and license terms.
 
 import csv
+import os
+import sys
+from argparse import ArgumentParser
 from collections import namedtuple
 from datetime import date
 from decimal import Decimal
-import os
-import sys
-
-from argparse import ArgumentParser
 from io import BytesIO, TextIOWrapper
-from proteus import Model, config
 
-from common import fetch, get_company, get_places, _progress
+from common import _progress, fetch, get_company, get_places
+from proteus import Model, config
 
 _TaxKey = namedtuple('_TaxKey', ['code', 'sourcing', 'product_class', 'start_date'])
 

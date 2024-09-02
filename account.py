@@ -3,9 +3,10 @@
 import logging
 import re
 
+import usaddress
+
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
-import usaddress
 
 logger = logging.getLogger(__name__)
 
