@@ -1,0 +1,5 @@
+* Implement dynamic resolution of tax rule based on date and destination
+* Filter tax report based on product class and sourcing
+* Add ``authority`` concept for imported data
+* Support basic reporting for streamlined states that use a composite SER code as well as for and those that don't
+* Support basic importing of tax rules, codes, and boundaries
