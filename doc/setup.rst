@@ -2,18 +2,21 @@
 Setup
 *****
 
-When the ``account_us_sstp`` module is activated it does not create any *Tax*,
-*Tax Rule*, *Tax Code*, or *Tax Boundary* records. You do this using the
-provided scripts.
+When the ``account_us_sstp`` module is activated it does not create any tax,
+tax rule, tax code, or tax boundary records. You do this using the provided
+scripts.
 
 .. important::
 
-   Before running these scripts, you must run the scripts from the ``country``
-   and ``country_uscensus`` modules to populate the `Country
+   Before running these scripts, you must run the ``trytond_import_countries``
+   script from the :doc:`Country Module <country:index>` and the
+   ``trytond_import_uscensus_subdivisions`` script from the :doc:`Country US
+   Census Module <country_uscensus:index>` in order to populate the `Country
    <country:model-country.country>` and `Subdivision
-   <country:model-country.subdivision>` records. These are needed to associate
-   `Taxes <model-account.tax>` and `Tax Rules <account:model-account.tax.rule>` with a
-   state tax authority and, for convenience, a physical location.
+   <country:model-country.subdivision>` records. These records are needed in
+   order to associate `Taxes <model-account.tax>` and `Tax Rules
+   <model-account.tax.rule>` with a state tax authority and, for convenience, a
+   physical location.
 
 It is possible to import tax data for a select number of states, for example,
 for those in which you are collecting tax or in which your business has
