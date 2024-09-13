@@ -88,7 +88,14 @@ class TaxRuleCollector:
                     ('product_class', '=', tax.product_class),
                     ])
             except ValueError:
-                sys.exit("Error could not find generic tax for %s" % tax.name)
+                # create tax
+                generic_tax, = Tax.duplicate([tax], default={
+                    'description': str(tax.name),
+                    'childs': None,
+                    'sourcing': None,
+                })
+                generic_tax.save()
+
             self.generic_taxes[tax.id] = generic_tax
         return generic_tax
 

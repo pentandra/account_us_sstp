@@ -240,6 +240,15 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
 
         return where
 
+    @classmethod
+    def copy(cls, taxes, default=None):
+        if default is None:
+            default = {}
+        else:
+            default = default.copy()
+        default.setdefault('code', None)
+        return super().copy(taxes, default=default)
+
 
 class TaxCodeContext(metaclass=PoolMeta):
     __name__ = 'account.tax.code.context'
