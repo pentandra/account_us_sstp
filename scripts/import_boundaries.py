@@ -484,7 +484,8 @@ _base = 'https://www.streamlinedsalestax.org/ratesandboundry/Boundary/'
 
 def main(database, args, config_file=None):
     config.set_trytond(database, config_file=config_file)
-    do_import(args)
+    with config.get_config().set_context(active_test=False):
+        do_import(args)
 
 
 def do_import(args):
