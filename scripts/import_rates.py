@@ -2,7 +2,7 @@
 
 import csv
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from collections import namedtuple
 from datetime import date
 from decimal import Decimal
@@ -19,7 +19,7 @@ def get_taxes(code_subdivision, company):
     Tax = Model.get('account.tax')
     return {(t.code, t.sourcing, t.product_class, t.start_date): t
             for t in Tax.find([
-                ('authority.subdivision.code', '=', code_subdivision),
+                ('authority.code', '=', code_subdivision),
                 ('company', '=', company.id),
                 ])}
 
@@ -42,8 +42,8 @@ def get_tax_account(name, company):
 
 
 def update_taxes(code_subdivision, stream, from_date, account):
-    print('Importing rates active as of %s' % (
-        from_date.isoformat()), file=sys.stderr)
+    print("Importing rates active as of ", from_date.isoformat(),
+          file=sys.stderr)
     Tax = Model.get('account.tax')
 
     places = get_places(code_subdivision)
@@ -75,7 +75,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
 
         sequence = None
         if place:
-            match place.level:
+            match place.fips_level:
                 case 'state':
                     sequence = 0
                 case 'county':
@@ -187,20 +187,18 @@ def do_import(args):
 
 
 def run():
-    parser = ArgumentParser()
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('-d', '--database', dest='database', required=True)
     parser.add_argument('-c', '--config', dest='config_file',
-        help='the trytond config file')
+        help="the trytond config file")
     parser.add_argument('-l', '--liability-account', dest='account',
         default='2230-', help="the code of the invoice and credit note "
-        "account related to the taxes (defaults to 2230-{code}, see the "
-        "account_us module)")
+        "account related to the taxes")
     parser.add_argument('-f', '--from', dest='from_date',
         default=date.today().isoformat(), type=date.fromisoformat,
-        help='import all taxes active from the given date YYYY-MM-DD '
-             '(defaults to %s)' % date.today().isoformat())
+        help="import all taxes active from the given date YYYY-MM-DD")
     parser.add_argument('--all', action='store_true',
-        help='import all available taxes (overrides --from)')
+        help="import all available taxes (overrides --from)")
     parser.add_argument('codes', nargs='+')
 
     args = parser.parse_args()

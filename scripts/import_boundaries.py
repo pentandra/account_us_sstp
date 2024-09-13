@@ -5,7 +5,7 @@
 import csv
 import os
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from collections import defaultdict
 from datetime import date
 from io import BytesIO, TextIOWrapper
@@ -25,7 +25,7 @@ def clean_boundaries(code_subdivision, company=None):
 
     Boundary = Model.get('account.tax.boundary')
     Boundary._proxy.clean([
-        ('authority.subdivision.code', '=', code_subdivision),
+        ('authority.code', '=', code_subdivision),
         ('company', '=', company),
         ], {})
     print('.', file=sys.stderr)
@@ -126,9 +126,9 @@ class TaxRuleCollector:
                     line.origin_tax = origin_tax
                     line.tax = tax
                     line.to_country = line.from_country = authority.country
-                    line.to_subdivision = authority.subdivision
+                    line.to_subdivision = authority
                     if tax.sourcing == 'intrastate':
-                        line.from_subdivision = authority.subdivision
+                        line.from_subdivision = authority
                     else:
                         line.from_subdivision = None
 
@@ -161,11 +161,11 @@ class TaxCodeCollector:
                               for r in reader if r['code'] == code_subdivision}
 
         TaxCode = Model.get('account.tax.code')
-        root = self.get_taxcode(self.authority.subdivision.code)
+        root = self.get_taxcode(self.authority.code)
         if not root:
             root = TaxCode(name="%s Streamlined Sales and Use Tax Report" % (
-                                        self.authority.subdivision.name),
-                           code=self.authority.subdivision.code,
+                                        self.authority.name),
+                           code=self.authority.code,
                            company=self.company,
                            authority=self.authority)
             root.save()
@@ -493,16 +493,16 @@ def do_import(args):
 
 
 def run():
-    parser = ArgumentParser()
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('-d', '--database', dest='database', required=True)
     parser.add_argument('-c', '--config', dest='config_file',
-        help='the trytond config file')
+        help="the trytond config file")
     parser.add_argument('-f', '--from', dest='from_date',
         default=date.today().isoformat(), type=date.fromisoformat,
         help="import all boundary records active from the given date "
-        "YYYY-MM-DD (defaults to %s)" % date.today().isoformat())
+        "YYYY-MM-DD")
     parser.add_argument('--all', action='store_true',
-        help='import all available boundary records (overrides --from)')
+        help="import all available boundary records (overrides --from)")
     parser.add_argument('codes', nargs='+')
 
     args = parser.parse_args()

@@ -22,8 +22,11 @@ PARITY = [
 
 class TaxAuthorityMixin:
     __slots__ = ()
-    authority = fields.Many2One('census.place', "Authority",
-            domain=[('parent', '=', None)],
+    authority = fields.Many2One('country.subdivision', "Authority",
+            domain=[
+                ('country.code', '=', 'US'),
+                ('parent', '=', None),
+            ],
             help="The tax authority that administers this entity")
     authority_override = fields.Boolean('Override Definition',
             help="Check to override tax authority definition",
@@ -60,18 +63,18 @@ class TaxAuthorityMixin:
         return False
 
     @classmethod
-    def copy(cls, taxes, default=None):
+    def copy(cls, records, default=None):
         if default is None:
             default = {}
         else:
             default = default.copy()
         default.setdefault('authority', None)
-        return super().copy(taxes, default=default)
+        return super().copy(records, default=default)
 
 
 class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax'
-    place = fields.Many2One('census.place', "Related Place",
+    place = fields.Many2One('country.subdivision', "Related Place",
             states={
                 'invisible': Bool(Eval('parent')),
                 })
@@ -94,7 +97,7 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
     def get_rec_name(self, name):
         parts = []
         if self.authority:
-            parts.append(self.authority.subdivision.code)
+            parts.append(self.authority.code)
             parts.append(self.code)
 
         if self.place:
@@ -388,11 +391,11 @@ class TaxLine(metaclass=PoolMeta):
 class TaxRule(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax.rule'
 
-    place = fields.Many2One('census.place', "Related Place")
+    place = fields.Many2One('country.subdivision', "Related Place")
 
     def get_rec_name(self, name):
         if self.place:
             return '%s [%s, %s]' % (self.name, self.place.name,
-                                    self.place.subdivision.code)
+                                    self.place.code)
         else:
             return self.name

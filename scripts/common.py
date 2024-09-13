@@ -4,12 +4,9 @@ import zipfile
 from html.parser import HTMLParser
 from io import BytesIO, TextIOWrapper
 
-try:
-    from urllib.error import HTTPError
-    from urllib.parse import urljoin
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import HTTPError, urlopen
+from urllib.error import HTTPError
+from urllib.parse import urljoin
+from urllib.request import urlopen
 
 try:
     from progressbar import ETA, Bar, ProgressBar, SimpleProgress
@@ -87,9 +84,14 @@ def fetch(code, base):
 
 
 def get_places(code_subdivision):
-    Place = Model.get('census.place')
-    return {p.code_fips: p for p in Place.find([
-        ('subdivision.code', '=', code_subdivision),
+    Subdivision = Model.get('country.subdivision')
+    return {p.code_fips: p for p in Subdivision.find([
+        ('country.code', '=', 'US'),
+        ['OR',
+         [('code', '=', code_subdivision)],
+         [('parent.code', '=', code_subdivision)],
+         [('parent.parent.code', '=', code_subdivision)],
+         ],
         ])}
 
 

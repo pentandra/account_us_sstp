@@ -1,5 +1,3 @@
-# This file is part of Tryon. The COPYRIGHT file at the top level of
-# this repository contains the full copyright noties and license terms.
 import logging
 import re
 
@@ -36,7 +34,7 @@ class BoundaryLocatorMixin:
             # Secondary address doesn't seem to currently be used by any states
             # secondary_number = address_tagged.get('OccupancyIdentifier')
 
-            address_domain.append([
+            address_domain.extend([
                 ('address_low', '<=', address_number),
                 ('address_high', '>=', address_number),
                 ('street', 'ilike', address_tagged.get('StreetName')),
@@ -51,7 +49,7 @@ class BoundaryLocatorMixin:
                                ('StreetNamePostDirectional', 'street_post'),
                                ('StreetNamePostType', 'street_suffix')]:
                 if address_tagged.get(tag):
-                    address_domain.append([
+                    address_domain.extend([
                             (field, 'ilike', address_tagged[tag]),
                             ])
                 else:
@@ -59,7 +57,7 @@ class BoundaryLocatorMixin:
 
         elif address_type == 'PO Box':
             box_id = address_tagged.get('USPSBoxID')
-            address_domain.append([
+            address_domain.extend([
                 ('address_low', '<=', box_id),
                 ('address_high', '>=', box_id),
                 ('address_parity', 'in', [None, ''] + ['B']),
@@ -68,7 +66,7 @@ class BoundaryLocatorMixin:
                 ('street_post', 'in', [None, '']),
                 ])
         else:
-            logger.warn("Recieved '%s' address without handler: %s",
+            logger.warning("Recieved '%s' address without handler: %s",
                         address_type, address_tagged)
 
         _zipcode_pattern = r'(\d{5})-?(\d{4})?$'
@@ -78,7 +76,7 @@ class BoundaryLocatorMixin:
         else:
             zipcode = zipext = None
 
-        address_domain.append([
+        address_domain.extend([
                 ('city', 'ilike', address.city),
                 ('zipcode', '=', zipcode),
                 ])
@@ -93,7 +91,7 @@ class BoundaryLocatorMixin:
                 [('end_date', '=', None)],
              ],
             ('authority.country', '=', address.country),
-            ('authority.subdivision', '=', address.subdivision),
+            ('authority', '=', address.subdivision),
             ['OR', [
                 ('type', '=', '4'),
                 ('zipcode_low', '<=', zipcode),
@@ -127,20 +125,22 @@ class InvoiceLine(BoundaryLocatorMixin, metaclass=PoolMeta):
         pool = Pool()
         Date = pool.get('ir.date')
 
-        if self.tax_date:
+        if getattr(self, 'tax_date', None):
             tax_date = self.tax_date
-        elif self.invoice and self.invoice.tax_date:
+        elif (getattr(self, 'invoice', None)
+              and getattr(self.invoice, 'tax_date', None)):
             tax_date = self.invoice.tax_date
         else:
             tax_date = Date.today()
 
-        if self.invoice and self.invoice.invoice_address:
+        if (getattr(self, 'invoice', None)
+            and getattr(self.invoice, 'invoice_address', None)):
             address = self.invoice.invoice_address
 
             boundary = self.get_boundary(address, tax_date)
 
             if boundary and boundary.rule:
-                if self.invoice and self.invoice.party:
+                if self.invoice.party:
                     party = self.invoice.party
                 elif self.party:
                     party = self.party
@@ -160,12 +160,14 @@ class InvoiceTax(BoundaryLocatorMixin, metaclass=PoolMeta):
         pool = Pool()
         Date = pool.get('ir.date')
 
-        if self.invoice and self.invoice.tax_date:
+        if (getattr(self, 'invoice', None)
+            and getattr(self.invoice, 'tax_date', None)):
             tax_date = self.invoice.tax_date
         else:
             tax_date = Date.today()
 
-        if self.invoice and self.invoice.invoice_address:
+        if (getattr(self, 'invoice', None)
+            and getattr(self.invoice, 'invoice_address', None)):
             address = self.invoice.invoice_address
 
             boundary = self.get_boundary(address, tax_date)
