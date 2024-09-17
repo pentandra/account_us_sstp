@@ -28,7 +28,7 @@ does not need to be.
 Tax Boundary
 ============
 
-This concept enables dynamic `Tax Rule <model-account.tax.rule` resolution.
+This concept enables dynamic `Tax Rule <model-account.tax.rule>` resolution.
 Using state-provided boundary records to provide the data, the appropriate rule
 can be found using the customer’s shipping address and tax date.
 
@@ -69,7 +69,7 @@ Tax Rule
 ========
 
 Builds upon the logic from the :doc:`Account Tax Rule Country Module
-<account_tax_rule_country:index`, providing rules for taxes, both for
+<account_tax_rule_country:index>`, providing rules for taxes, both for
 transactions within a state and between states.
 
 A Tax Rule can be related to a `physical location <country:Subdivision>`, but

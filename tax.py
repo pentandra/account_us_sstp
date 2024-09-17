@@ -14,9 +14,9 @@ from trytond.transaction import Transaction
 
 PARITY = [
     (None, ""),
-    ('O', 'Odd'),
-    ('E', 'Even'),
-    ('B', 'Both'),
+    ('O', "Odd"),
+    ('E', "Even"),
+    ('B', "Both"),
     ]
 
 
@@ -117,6 +117,16 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
 
         parts.append(self.name)
         return '—'.join(parts)
+
+    @classmethod
+    def __setup__(cls):
+        super().__setup__()
+        cls.parent.domain = [
+            ('code', '=', Eval('code')),
+            ('place', '=', Eval('place')),
+            ('sourcing', '=', Eval('sourcing')),
+            ('product_class', '=', Eval('product_class')),
+        cls.parent.domain or []]
 
     @classmethod
     def search_rec_name(cls, name, clause):
@@ -335,6 +345,7 @@ class TaxBoundary(TaxAuthorityMixin, ModelView, ModelSQL):
     @classmethod
     def __setup__(cls):
         super().__setup__()
+        cls.authority.required = True
         cls.__rpc__.update(
             clean=RPC(
                 readonly=False, fresh_session=True))

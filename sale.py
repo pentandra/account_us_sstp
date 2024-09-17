@@ -5,18 +5,21 @@ from .account import BoundaryLocatorMixin
 
 
 class SaleLine(BoundaryLocatorMixin, metaclass=PoolMeta):
-    "Sale Line"
     __name__ = 'sale.line'
 
     @fields.depends('sale', 'sale_date',
                     '_parent_sale.shipment_address')
     def compute_taxes(self, party):
+        """
+        Temporarily set customer tax rule, if boundary located.
+        """
         pool = Pool()
         Date = pool.get('ir.date')
 
         sale_date = self.sale_date or Date.today()
 
-        if self.sale and self.sale.shipment_address:
+        if (getattr(self, 'sale', None)
+            and getattr(self.sale, 'shipment_address', None)):
             address = self.sale.shipment_address
 
             boundary = self.get_boundary(address, sale_date)
