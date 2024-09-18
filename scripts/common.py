@@ -8,6 +8,8 @@ from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
+__all__ = ['_progress', 'fetch', 'get_places', 'get_company']
+
 try:
     from progressbar import ETA, Bar, ProgressBar, SimpleProgress
 except ImportError:

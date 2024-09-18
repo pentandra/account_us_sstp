@@ -9,7 +9,7 @@ from decimal import Decimal
 from io import BytesIO, TextIOWrapper
 from proteus import Model, config
 
-from common import _progress, fetch, get_company, get_places
+from .common import _progress, fetch, get_company, get_places
 
 _TaxKey = namedtuple('_TaxKey',
                      ['code', 'sourcing', 'product_class', 'start_date'])
@@ -154,7 +154,7 @@ def update_taxes_parent(taxes):
         if record.type == 'none':
             continue
 
-        code, sourcing, product_class, start_date = k
+        code, sourcing, product_class, _ = k
         record.parent = taxes[(code, sourcing, product_class, None)]
         records.append(record)
     Tax.save(records)
@@ -167,20 +167,17 @@ _fieldnames = ['state', 'jurisdiction_type', 'jurisdiction_fips_code',
 _base = 'https://www.streamlinedsalestax.org/ratesandboundry/Rates/'
 
 
-def main(database, args, config_file=None):
+def main(database, codes, from_date, account, config_file=None):
     config.set_trytond(database, config_file=config_file)
     with config.get_config().set_context(active_test=False):
-        do_import(args)
+        do_import(codes, from_date, account)
 
 
-def do_import(args):
-    for code in args.codes:
+def do_import(codes, from_date, account):
+    for code in codes:
         print(code, file=sys.stderr)
-        if args.account[-1] in ['-', '–', '—']:
-            account = args.account + code.upper()
-        else:
-            account = args.account
-        from_date = date.min if args.all else args.from_date
+        if str(account)[-1] in ['-', '–', '—']:
+            account = account + code.upper()
         code_subdivision = 'US-%s' % code.upper()
         taxes = update_taxes(code_subdivision,
                              fetch(code.upper(), _base), from_date, account)
@@ -203,7 +200,8 @@ def run():
     parser.add_argument('codes', nargs='+')
 
     args = parser.parse_args()
-    main(args.database, args, args.config_file)
+    from_date = date.min if args.all else args.from_date
+    main(args.database, args.codes, from_date, args.account, args.config_file)
 
 
 if __name__ == '__main__':

@@ -13,7 +13,7 @@ from itertools import batched, chain, groupby
 from operator import attrgetter, itemgetter
 from proteus import Model, config
 
-from common import _progress, fetch, get_company, get_places
+from .common import _progress, fetch, get_company, get_places
 
 
 def clean_boundaries(code_subdivision, company=None):
@@ -482,17 +482,16 @@ _fieldnames = ['record_type', 'start_date', 'end_date',
 _base = 'https://www.streamlinedsalestax.org/ratesandboundry/Boundary/'
 
 
-def main(database, args, config_file=None):
+def main(database, codes, from_date, config_file=None):
     config.set_trytond(database, config_file=config_file)
     with config.get_config().set_context(active_test=False):
-        do_import(args)
+        do_import(codes, from_date)
 
 
-def do_import(args):
-    for code in args.codes:
+def do_import(codes, from_date):
+    for code in codes:
         print(code, file=sys.stderr)
         code_subdivision = 'US-%s' % code.upper()
-        from_date = date.min if args.all else args.from_date
 
         clean_boundaries(code_subdivision)
         taxcodes, collector = import_boundaries(
@@ -514,7 +513,8 @@ def run():
     parser.add_argument('codes', nargs='+')
 
     args = parser.parse_args()
-    main(args.database, args, args.config_file)
+    from_date = date.min if args.all else args.from_date
+    main(args.database, args.codes, from_date, args.config_file)
 
 
 if __name__ == '__main__':
