@@ -2,6 +2,13 @@
 Design
 ******
 
+.. seealso::
+
+   The Streamlined Sales Tax `Technology Guide`_ for background information and
+   technical requirements for this module.
+
+.. _Technology Guide: https://www.streamlinedsalestax.org/docs/default-source/technology/technology-guide-october-2022.pdf
+
 The *Account US SSTP Module* introduces or extends the following concepts:
 
 .. _model-account.tax:
