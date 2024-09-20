@@ -311,7 +311,8 @@ class TaxCodeCollector:
             if self.names.get(code_tax):
                 taxcode.name = self.names[code_tax]
             else:
-                print('Could not find jurisdiction name for %s' % code_tax)
+                print('Could not find jurisdiction name for %s' % code_tax,
+                      file=sys.stderr)
                 taxcode.name = code_tax
 
             taxcode.save()
@@ -400,7 +401,7 @@ def import_boundaries(code_subdivision, boundaries, from_date, company=None):
             record.zipext = row['plus4']
         else:
             print("\nUnknown record type '%s' on line %s" % (
-                record_type, reader.line_num))
+                record_type, reader.line_num), file=sys.stderr)
 
         records.append(record)
 
