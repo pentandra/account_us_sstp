@@ -95,10 +95,12 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
         ], "Product Class", sort=False)
 
     def get_rec_name(self, name):
+        if not self.authority:
+            return self.name
+
         parts = []
-        if self.authority:
-            parts.append(self.authority.code)
-            parts.append(self.code)
+        parts.append(self.authority.code)
+        parts.append(self.code)
 
         if self.place:
             parts.append(self.place.name)
@@ -249,6 +251,16 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
             where = where & (tax.product_class == product_class)
 
         return where
+
+    @classmethod
+    def copy(cls, records, default=None):
+        if default is None:
+            default = {}
+        else:
+            default = default.copy()
+        default.setdefault('code', None)
+        default.setdefault('place', None)
+        return super().copy(records, default=default)
 
 
 class TaxCodeContext(metaclass=PoolMeta):

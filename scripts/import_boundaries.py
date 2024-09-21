@@ -92,8 +92,6 @@ class TaxRuleCollector:
                 generic_tax, = Tax.duplicate([tax], default={
                     'description': str(tax.name),
                     'childs': None,
-                    'code': None,
-                    'place': None,
                     'sourcing': None,
                 })
                 generic_tax.save()
