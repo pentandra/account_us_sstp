@@ -27,6 +27,9 @@ class TaxAuthorityMixin:
                 ('country.code', '=', 'US'),
                 ('parent', '=', None),
             ],
+            states={
+                'invisible': Bool(Eval('parent')),
+            },
             help="The tax authority that administers this entity")
     authority_override = fields.Boolean('Override Definition',
             help="Check to override tax authority definition",
@@ -76,7 +79,7 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax'
     place = fields.Many2One('country.subdivision', "Related Place",
             states={
-                'invisible': Bool(Eval('parent')),
+                'invisible': ~Eval('authority') | Bool(Eval('parent')),
                 })
     code = fields.Char("Jurisdiction Code", size=5, states={
         'required': Bool(Eval('authority')),
@@ -87,12 +90,16 @@ class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
         ('intrastate', "In-state Destination"),
         ('interstate', "Out-of-state Destination"),
         ('origin', "Origin"),
-        ], "Sourcing", sort=False)
+        ], "Sourcing", sort=False, states={
+            'invisible': Bool(Eval('parent')),
+            })
     product_class = fields.Selection([
         (None, ""),
         ('general', "General Goods & Services"),
         ('food', "Food & Drugs"),
-        ], "Product Class", sort=False)
+        ], "Product Class", sort=False, states={
+            'invisible': Bool(Eval('parent')),
+            })
 
     def get_rec_name(self, name):
         if not self.authority:
@@ -414,10 +421,13 @@ class TaxLine(metaclass=PoolMeta):
 class TaxRule(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax.rule'
 
-    place = fields.Many2One('country.subdivision', "Related Place")
+    place = fields.Many2One('country.subdivision', "Related Place",
+                states={
+                    'invisible': ~Eval('authority'),
+                })
 
     def get_rec_name(self, name):
-        if self.place:
+        if self.authority and self.place:
             return '%s [%s, %s]' % (self.name, self.place.name,
                                     self.place.code)
         else:

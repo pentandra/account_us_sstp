@@ -11,12 +11,10 @@
         <label name="code"/>
         <field name="code"/>
     </xpath>
-    <xpath expr="/form/notebook/page[@id='general']" position="after">
-        <page string="Streamlined Sales Tax Parameters" id="sst_params">
-            <label name="sourcing"/>
-            <field name="sourcing"/>
-            <label name="product_class"/>
-            <field name="product_class"/>
-        </page>
+    <xpath expr="/form/notebook/page[@id='general']/field[@name='childs']" position="before">
+        <label name="sourcing"/>
+        <field name="sourcing"/>
+        <label name="product_class"/>
+        <field name="product_class"/>
     </xpath>
 </data>
