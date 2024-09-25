@@ -33,28 +33,54 @@ def clean_boundaries(code_subdivision, company=None):
 
 class TaxRuleCollector:
 
-    def __init__(self, places, company=None):
+    def __init__(self, code_subdivision, places, company=None):
         self.places = places
-        self.rules = {}
+        self.rule_lines = {}
         self.taxes = {}
         self.generic_taxes = {}
         self.company = company or get_company()
 
-    def get_rule(self, name, authority, kind='sale'):
-        rule = self.rules.get(name)
-        if not rule:
-            TaxRule = Model.get('account.tax.rule')
+        authority = None
+        try:
+            authority, = [v for v in places.values() if not v.parent]
+        except ValueError:
+            sys.exit(
+                "\nError could not find a state authority for the code: %s" % (
+                    code_subdivision))
+
+        self.authority = authority
+
+        TaxRule = Model.get('account.tax.rule')
+        try:
+            rule, = TaxRule.find([
+                        ('name', '=', f"{self.authority.name} Retail"),
+                        ('authority', '=', self.authority),
+                        ('company', '=', self.company),
+                        ('kind', '=', 'sale'),
+                        ])
+        except ValueError:
+            rule = TaxRule(name=f"{self.authority.code} Retail",
+                           kind='sale',
+                           company=self.company,
+                           authority=self.authority)
+            rule.save()
+
+        self.rule = rule
+
+    def get_rule_lines(self, tax_key, authority):
+        rule_lines = self.rule_lines.get(tax_key)
+        if not rule_lines:
+            TaxRuleLine = Model.get('account.tax.rule.line')
             try:
-                rule, = TaxRule.find([
+                rule_lines, = TaxRuleLine.find([
+                    ('rule', '=', self.rule.id),
                     ('authority', '=', authority),
-                    ('company', '=', self.company),
-                    ('name', '=', name),
-                    ('kind', '=', kind),
+                    ('tax_key', '=', tax_key),
                     ])
             except ValueError:
                 return
-            self.rules[name] = rule
-        return rule
+            self.rule_lines[tax_key] = rule_lines
+        return rule_lines
 
     def get_taxes(self, code, authority):
         taxes = self.taxes.get(code)
@@ -105,22 +131,12 @@ class TaxRuleCollector:
         special_codes = map(_special_code_index,
                             batched(row['special_districts'], n=3))
         codes = tuple(filter(None, chain(fips_codes, special_codes)))
-        name = '%s Retail' % '–'.join(codes)
+        tax_key = '–'.join(codes)
 
-        rule = self.get_rule(name, authority)
+        rule_lines = self.get_rule_lines(tax_key, authority)
 
-        if not rule:
-            TaxRule = Model.get('account.tax.rule')
-            code_fips = next((c for c in reversed(fips_codes) if c), None)
-            place = self.places.get(code_fips)
-
-            rule = TaxRule(
-                    name=name,
-                    kind='sale',
-                    company=self.company,
-                    place=place,
-                    authority=authority)
-
+        if not rule_lines:
+            rule_lines = set()
             for code in codes:
                 if all(c == '0' for c in code):
                     continue
@@ -128,7 +144,9 @@ class TaxRuleCollector:
                 for tax in self.get_taxes(code, authority):
                     origin_tax = self.get_generic_tax(tax)
 
-                    line = rule.lines.new()
+                    line = self.rule.lines.new()
+                    line.authority = authority
+                    line.tax_key = tax_key
                     line.group = tax.group
                     line.origin_tax = origin_tax
                     line.tax = tax
@@ -138,9 +156,11 @@ class TaxRuleCollector:
                         line.from_subdivision = authority
                     else:
                         line.from_subdivision = None
+                    rule_lines.add(line)
+            self.rule.save()
+            self.rule_lines[tax_key] = rule_lines
 
-            rule.save()
-        return rule
+        return tax_key, rule_lines
 
 
 class TaxCodeCollector:
@@ -331,22 +351,17 @@ def import_boundaries(code_subdivision, boundaries, from_date, company=None):
         company = get_company()
 
     code_collector = TaxCodeCollector(
-            code_subdivision, places, company=company)
-    rule_collector = TaxRuleCollector(places, company=company)
+        code_subdivision, places, company=company)
+    rule_collector = TaxRuleCollector(
+        code_subdivision, places, company=company)
 
     _seen = defaultdict(set)
 
-    def seen(rule, code=None):
-        if code:
-            if _seen.get(code) and rule in _seen[code]:
-                return True
-            _seen[code].add(rule)
-            return False
-        else:
-            if _seen.get(rule):
-                return True
-            _seen[rule].add(1)
-            return False
+    def seen(rule_lines, code=None):
+        if _seen.get(code) and rule_lines <= _seen[code]:
+            return True
+        _seen[code] |= rule_lines
+        return False
 
     f = TextIOWrapper(BytesIO(boundaries), encoding='utf-8')
     reader = csv.DictReader(f, fieldnames=_fieldnames,
@@ -359,9 +374,9 @@ def import_boundaries(code_subdivision, boundaries, from_date, company=None):
         end_date = None if end_date == date.max else end_date
 
         taxcode = code_collector.collect(row)
-        rule = rule_collector.collect(row)
+        tax_key, rule_lines = rule_collector.collect(row)
 
-        seen(rule, code=taxcode)
+        seen(rule_lines, code=taxcode or tax_key)
 
         if reader.line_num % 10000 == 0:
             Boundary.save(records)
@@ -376,7 +391,7 @@ def import_boundaries(code_subdivision, boundaries, from_date, company=None):
                           end_date=end_date,
                           authority=authority,
                           company=company,
-                          rule=rule,
+                          tax_key=tax_key,
                           code=taxcode)
 
         if record_type in ('4', 'Z'):
@@ -407,30 +422,28 @@ def import_boundaries(code_subdivision, boundaries, from_date, company=None):
 
     Boundary.save(records)
     print('.', file=sys.stderr)
-    return _seen, code_collector
+    return _seen, code_collector, rule_collector
 
 
 def update_taxcode_taxes(taxcodes, collector):
     sys.stderr.write('Updating taxcode taxes')
     sys.stderr.flush()
     TaxCode = Model.get('account.tax.code')
-    TaxRule = Model.get('account.tax.rule')
 
     _codesorter = attrgetter('code')
     _tax_bases = set()
     _indie_codes = set()
     records = []
-    for taxcode, rules in _progress(list(taxcodes.items())):
+    for taxcode, rule_lines in _progress(list(taxcodes.items())):
         if isinstance(taxcode, TaxCode):
-            taxes = {tax for rule in rules
-                     for line in rule.lines for tax in line.tax.childs}
+            taxes = {tax for line in rule_lines for tax in line.tax.childs}
             for tax in sorted(taxes, key=_codesorter):
                 # update name?
                 if tax not in [line.tax for line in taxcode.lines]:
                     TaxCodeCollector.create_lines(taxcode, tax)
             records.append(taxcode)
-        elif isinstance(taxcode, TaxRule):
-            taxes = [tax for line in taxcode.lines for tax in line.tax.childs]
+        elif isinstance(taxcode, str):
+            taxes = [tax for line in rule_lines for tax in line.tax.childs]
             _indie_codes.update(taxes)
         else:
             taxes = []

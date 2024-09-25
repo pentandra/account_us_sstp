@@ -9,23 +9,20 @@ class SaleLine(BoundaryLocatorMixin, metaclass=PoolMeta):
 
     @fields.depends('sale', 'sale_date',
                     '_parent_sale.shipment_address')
-    def compute_taxes(self, party):
-        """
-        Temporarily set customer tax rule, if boundary located.
-        """
+    def _get_tax_rule_pattern(self):
         pool = Pool()
         Date = pool.get('ir.date')
 
+        pattern = super()._get_tax_rule_pattern()
+
         sale_date = self.sale_date or Date.today()
 
-        if (getattr(self, 'sale', None)
-            and getattr(self.sale, 'shipment_address', None)):
-            address = self.sale.shipment_address
+        boundary = None
+        if self.sale and self.sale.shipment_address:
+            boundary = self.get_boundary(
+                self.sale.shipment_address, sale_date)
 
-            boundary = self.get_boundary(address, sale_date)
+        pattern['tax_key'] = (
+            boundary.tax_key if boundary and boundary.tax_key else None)
 
-            if boundary and boundary.rule:
-                if party and not party.customer_tax_rule:
-                    party.customer_tax_rule = boundary.rule
-
-        return super().compute_taxes(party)
+        return pattern

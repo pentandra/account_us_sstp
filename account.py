@@ -121,37 +121,27 @@ class InvoiceLine(BoundaryLocatorMixin, metaclass=PoolMeta):
     __name__ = 'account.invoice.line'
 
     @fields.depends('_parent_invoice.invoice_address')
-    def on_change_product(self):
-        """
-        Temporarily set customer tax rule, if boundary located.
-        """
+    def _get_tax_rule_pattern(self):
         pool = Pool()
+        pattern = super()._get_tax_rule_pattern()
+
         Date = pool.get('ir.date')
 
-        if getattr(self, 'tax_date', None):
+        if self.tax_date:
             tax_date = self.tax_date
-        elif (getattr(self, 'invoice', None)
-              and getattr(self.invoice, 'tax_date', None)):
+        elif self.invoice and self.invoice.tax_date:
             tax_date = self.invoice.tax_date
         else:
             tax_date = Date.today()
 
-        if (getattr(self, 'invoice', None)
-            and getattr(self.invoice, 'invoice_address', None)):
-            address = self.invoice.invoice_address
+        if self.invoice and self.invoice.invoice_address:
+            boundary = self.get_boundary(
+                self.invoice.invoice_address, tax_date)
 
-            boundary = self.get_boundary(address, tax_date)
+        pattern['tax_key'] = (
+            boundary.tax_key if boundary and boundary.tax_key else None)
 
-            if boundary and boundary.rule:
-                if self.invoice.party:
-                    party = self.invoice.party
-                elif self.party:
-                    party = self.party
-
-                if party and not party.customer_tax_rule:
-                    party.customer_tax_rule = boundary.rule
-
-        super().on_change_product()
+        return pattern
 
 
 class InvoiceTax(BoundaryLocatorMixin, metaclass=PoolMeta):

@@ -339,12 +339,7 @@ class TaxBoundary(TaxAuthorityMixin, ModelView, ModelSQL):
         'required': Eval('type') == '4',
         })
     company = fields.Many2One('company.company', "Company", required=True)
-    rule = fields.Many2One('account.tax.rule', "Tax Rule",
-            domain=[
-                ('authority', '=', Eval('authority', -1)),
-                ('company', '=', Eval('company', -1)),
-                ],
-            ondelete='RESTRICT', required=True)
+    tax_key = fields.Char("Tax Key", required=True)
     code = fields.Many2One('account.tax.code', "Tax Code",
             domain=[
                 ('authority', '=', Eval('authority', -1)),
@@ -421,14 +416,19 @@ class TaxLine(metaclass=PoolMeta):
 class TaxRule(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax.rule'
 
-    place = fields.Many2One('country.subdivision', "Related Place",
-                states={
-                    'invisible': ~Eval('authority'),
-                })
 
-    def get_rec_name(self, name):
-        if self.authority and self.place:
-            return '%s [%s, %s]' % (self.name, self.place.name,
-                                    self.place.code)
-        else:
-            return self.name
+class TaxRuleLine(TaxAuthorityMixin, metaclass=PoolMeta):
+    __name__ = 'account.tax.rule.line'
+    tax_key = fields.Char("Tax Key", states={
+                'required': Bool(Eval('authority')),
+                'invisible': ~Bool(Eval('authority', -1)),
+                }, domain = [
+                    ('rule.authority', '=', Eval('authority', -1)),
+                ], help="A composite key made of all applicable tax codes")
+
+    def match(self, pattern):
+        pattern = pattern.copy()
+        tax_key = pattern.pop('tax_key')
+        if self.tax_key != tax_key:
+            return False
+        return super().match(pattern)

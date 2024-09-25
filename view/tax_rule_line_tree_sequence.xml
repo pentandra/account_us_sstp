@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<data>
+    <xpath expr="/tree/field[@name='start_date']" position="before">
+        <field name="tax_key" expand="1"/>
+    </xpath>
+</data>

@@ -4,7 +4,4 @@
     <xpath expr="/tree/field[@name='name']" position="before">
         <field name="authority" optional="1"/>
     </xpath>
-    <xpath expr="/tree/field[@name='kind']" position="after">
-        <field name="place" expand="1" optional="1"/>
-    </xpath>
 </data>

@@ -18,6 +18,7 @@ def register():
         tax.TaxCodeContext,
         tax.TaxLine,
         tax.TaxRule,
+        tax.TaxRuleLine,
         module='account_us_sstp', type_='model')
     Pool.register(
         account.InvoiceLine,

@@ -8,8 +8,4 @@
             <field name="authority_override" xexpand="0" width="100"/>
         </group>
     </xpath>
-    <xpath expr="/form/field[@name='company']" position="after">
-        <label name="place"/>
-        <field name="place"/>
-    </xpath>
 </data>
