@@ -17,12 +17,13 @@ class SaleLine(BoundaryLocatorMixin, metaclass=PoolMeta):
 
         sale_date = self.sale_date or Date.today()
 
-        boundary = None
+        tax_key = None
         if self.sale and self.sale.shipment_address:
             boundary = self.get_boundary(
                 self.sale.shipment_address, sale_date)
+            if boundary:
+                tax_key = boundary.tax_key
 
-        pattern['tax_key'] = (
-            boundary.tax_key if boundary and boundary.tax_key else None)
+        pattern['tax_key'] = tax_key.id if tax_key else None
 
         return pattern

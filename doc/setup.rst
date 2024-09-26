@@ -9,19 +9,21 @@ scripts.
 .. important::
 
    Before running these scripts, you must run the ``trytond_import_countries``
-   script from the :doc:`Country Module <country:index>` and the
-   ``trytond_import_uscensus_subdivisions`` script from the :doc:`Country US
-   Census Module <country_uscensus:index>` in order to populate the `Country
-   <country:model-country.country>` and `Subdivision
-   <country:model-country.subdivision>` records. These records are needed in
-   order to associate `Taxes <model-account.tax>` and `Tax Rules
-   <model-account.tax.rule>` with a state tax authority and, for convenience, a
-   physical location.
+   script from the :doc:`Country Module <country:index>` to populate the
+   records needed to associate this module’s models with a state tax authority.
+
+   Optionally, you may run the ``trytond_import_uscensus_subdivisions`` script
+   from the :doc:`Country US Census Module <country_uscensus:index>` in order
+   to populate smaller `Subdivision <country:model-country.subdivision>`
+   records, including records for counties, cities, towns, and other physical
+   places. These records are needed when importing the rates in order to
+   associate `Taxes <model-account.tax>` with a physical place and enabling
+   human-oriented descriptions of taxes that include place names.
 
 It is possible to import tax data for a select number of states, for example,
 for those in which you are collecting tax or in which your business has
-achieved a tax nexus. This will allow you to keep the size of the database as
-small as possible.
+achieved a tax nexus. This will allow you to carefully manage the size of the
+database and scope of the business.
 
 .. _Loading and updating tax rates:
 
@@ -61,7 +63,7 @@ It is run with:
 .. tip::
 
    To reduce the size of your database backups (and since the boundary records
-   are considered ephemeral and can be re-imported at will), consider using
-   ``--exclude-table-data='account_tax_boundary'`` in your backup script.
+   are considered ephemeral data that can be re-imported at will), consider
+   using ``--exclude-table-data='account_tax_boundary'`` in your backup script.
 
    See https://www.postgresql.org/docs/current/app-pgdump.html for more info.

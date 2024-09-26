@@ -126,7 +126,7 @@ def update_taxes(code_subdivision, stream, from_date, account):
                     name, format(Decimal(row[type_]), '.2%'))
             record.place = place
             record.description = '%s tax (%s)' % (
-                    place.name if place else code_tax,
+                    place.name if place else f"{group.name} {code_tax}",
                     format(Decimal(row[type_]), '.2%'))
             record.authority = authority
             record.type = 'percentage'

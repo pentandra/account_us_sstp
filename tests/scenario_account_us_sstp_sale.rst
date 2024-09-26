@@ -5,11 +5,10 @@ Account US SSTP Scenario Sale
 Testing the basic functionality of the module from a sale to the creation of an
 invoice. Three types of boundary records will be tested: Zip, ZipPlus4, and
 Address. Product Categories will carry a generic tax that should be converted
-to a real tax dynamically. For simplicity, this test will use a *Tax Rule*
-without a group; normally taxes will belong to a group when you are using them
-(and you will have more than one tax to deal with). The scenario will use a
-target tax with a reporting code and one without to test both possibilities in
-tax reporting.
+to a real tax. For simplicity, this test will use a *Tax Rule* without a group;
+normally taxes will belong to a group when you are using them (and you will
+have more than one tax to deal with). The scenario will use a target tax with a
+reporting code and one without to test both possibilities in tax reporting.
 
 See :doc:`this scenario <account_us_sstp_default_taxes>` for default taxes.
 
@@ -87,6 +86,7 @@ Create taxes::
     >>> generic_food_tax.save()
 
     >>> tax = create_tax(Decimal('.10'))
+    >>> tax.code = 'bar'
     >>> tax.sourcing = 'intrastate'
     >>> tax.product_class = 'general'
     >>> tax.save()
@@ -101,6 +101,7 @@ Create tax codes::
 
     >>> base_code = create_tax_code(tax, 'base', 'invoice')
     >>> line = base_code.lines.new()
+    >>> line.authority = authority
     >>> line.operator = '+'
     >>> line.tax = food_tax
     >>> line.amount = 'base'
@@ -110,6 +111,7 @@ Create tax codes::
     >>> tax_code.authority = authority
     >>> tax_code.code = 'foo'
     >>> line = tax_code.lines.new()
+    >>> line.authority = authority
     >>> line.operator = '+'
     >>> line.tax = food_tax
     >>> line.amount = 'tax'
@@ -119,9 +121,10 @@ Create tax codes::
 Create tax rule::
 
     >>> TaxRule = Model.get('account.tax.rule')
-    >>> rule = TaxRule(name="Tax Rule")
-    >>> rule.authority = authority
+    >>> rule = TaxRule(authority=authority)
+    >>> rule.name  = "Tax Rule"
     >>> rule_line = rule.lines.new()
+    >>> rule_line.authority = authority
     >>> rule_line.from_country = us
     >>> rule_line.from_subdivision = authority
     >>> rule_line.to_country = us
@@ -129,6 +132,7 @@ Create tax rule::
     >>> rule_line.origin_tax = generic_tax
     >>> rule_line.tax = tax
     >>> rule_line = rule.lines.new()
+    >>> rule_line.authority = authority
     >>> rule_line.from_country = us
     >>> rule_line.from_subdivision = authority
     >>> rule_line.to_country = us
@@ -140,8 +144,12 @@ Create tax rule::
 Create tax boundaries::
 
     >>> TaxBoundary = Model.get('account.tax.boundary')
-    >>> boundary = TaxBoundary(rule=rule)
-    >>> boundary.authority = authority
+    >>> TaxKey = Model.get('account.tax.boundary.tax_key')
+    >>> tax_key = TaxKey(authority=authority)
+    >>> tax_key.value = 'foo-bar'
+    >>> tax_key.save()
+    >>> boundary = TaxBoundary(authority=authority)
+    >>> boundary.tax_key = tax_key
     >>> boundary.start_date = today
     >>> boundary.end_date = today
     >>> boundary.type = '4'
@@ -150,8 +158,8 @@ Create tax boundaries::
     >>> boundary.zipext_low = '3000'
     >>> boundary.zipext_high = '4000'
     >>> boundary.save()
-    >>> boundary = TaxBoundary(rule=rule)
-    >>> boundary.authority = authority
+    >>> boundary = TaxBoundary(authority=authority)
+    >>> boundary.tax_key = tax_key
     >>> boundary.start_date = today
     >>> boundary.end_date = today
     >>> boundary.type = 'Z'
@@ -159,8 +167,8 @@ Create tax boundaries::
     >>> boundary.zipcode_high = '85000'
     >>> boundary.code = tax_code
     >>> boundary.save()
-    >>> boundary = TaxBoundary(rule=rule)
-    >>> boundary.authority = authority
+    >>> boundary = TaxBoundary(authority=authority)
+    >>> boundary.tax_key = tax_key
     >>> boundary.start_date = today
     >>> boundary.end_date = today
     >>> boundary.type = 'A'
@@ -178,6 +186,7 @@ Create parties::
 
     >>> Party = Model.get('party.party')
     >>> customer1 = Party(name='Customer 1')
+    >>> customer1.customer_tax_rule = rule
     >>> address, = customer1.addresses
     >>> address.country = us
     >>> address.subdivision = authority
@@ -187,6 +196,7 @@ Create parties::
     >>> customer1.save()
 
     >>> customer2 = Party(name='Customer 2')
+    >>> customer2.customer_tax_rule = rule
     >>> address, = customer2.addresses
     >>> address.country = us
     >>> address.subdivision = authority
@@ -196,6 +206,7 @@ Create parties::
     >>> customer2.save()
 
     >>> customer3 = Party(name='Customer 3')
+    >>> customer3.customer_tax_rule = rule
     >>> address, = customer3.addresses
     >>> address.country = us
     >>> address.subdivision = authority
@@ -205,13 +216,23 @@ Create parties::
     >>> customer3.save()
 
     >>> customer4 = Party(name='Customer 4')
-    >>> address, = customer3.addresses
+    >>> customer4.customer_tax_rule = rule
+    >>> address, = customer4.addresses
     >>> address.country = us
     >>> address.subdivision = authority
     >>> address.postal_code = '55555-4001'
     >>> address.city = 'Trytown'
     >>> address.street = 'PO Box 4001'
     >>> customer4.save()
+
+    >>> customer5 = Party(name='Customer 5')
+    >>> address, = customer5.addresses
+    >>> address.country = us
+    >>> address.subdivision = authority
+    >>> address.postal_code = '55555-4000'
+    >>> address.city = 'Trytown'
+    >>> address.street = 'PO Box 4000'
+    >>> customer5.save()
 
 Create account categories::
 
@@ -316,8 +337,8 @@ Customer 2 Tests ('Z' boundary resolution)
 ==========================================
 
 For no other reason than that the ZIP Code search is simplest, I'm testing the
-tax code logic in this section. Notice that the matching boundary record was
-the only one set with a tax code as part of the :ref:`setup`.
+``foo`` tax code logic in this section. Notice that the matching boundary
+record was the only one set with a tax code as part of the :ref:`setup`.
 
 Create sale::
 
@@ -509,6 +530,58 @@ Check invoice::
 Create food sale::
 
     >>> sale = Sale(party=customer4)
+    >>> sale_line = sale.lines.new()
+    >>> sale_line.product = food
+    >>> sale_line.quantity = 5.0
+    >>> sale.click('quote')
+    >>> sale.click('confirm')
+    >>> sale.state
+    'processing'
+
+Check food invoice::
+
+    >>> sale.reload()
+    >>> sale.invoice_state
+    'pending'
+    >>> invoice, = sale.invoices
+    >>> invoice_line, = invoice.lines
+    >>> line_tax, = invoice_line.taxes
+    >>> assertEqual(line_tax, generic_food_tax)
+    >>> invoice.total_amount
+    Decimal('50.00')
+
+.. _Customer 5 tests:
+
+Customer 5 Tests (party without tax rule, tax not resolved)
+===========================================================
+
+Create sale::
+
+    >>> Sale = Model.get('sale.sale')
+    >>> sale = Sale(party=customer5)
+    >>> sale_line = sale.lines.new()
+    >>> sale_line.product = product
+    >>> sale_line.quantity = 10.0
+    >>> sale.click('quote')
+    >>> sale.click('confirm')
+    >>> sale.state
+    'processing'
+
+Check invoice::
+
+    >>> sale.reload()
+    >>> sale.invoice_state
+    'pending'
+    >>> invoice, = sale.invoices
+    >>> invoice_line, = invoice.lines
+    >>> line_tax, = invoice_line.taxes
+    >>> assertEqual(line_tax, generic_tax)
+    >>> invoice.total_amount
+    Decimal('100.00')
+
+Create food sale::
+
+    >>> sale = Sale(party=customer5)
     >>> sale_line = sale.lines.new()
     >>> sale_line.product = food
     >>> sale_line.quantity = 5.0

@@ -339,9 +339,11 @@ class TaxBoundary(TaxAuthorityMixin, ModelView, ModelSQL):
         'required': Eval('type') == '4',
         })
     company = fields.Many2One('company.company', "Company", required=True)
-    tax_key = fields.Char("Tax Key", required=True)
-    code = fields.Many2One('account.tax.code', "Tax Code",
-            domain=[
+    tax_key = fields.Many2One('account.tax.boundary.tax_key', "Tax Key",
+                  domain=[
+                      ('authority', '=', Eval('authority', -1)),
+                  ], required=True)
+    code = fields.Many2One('account.tax.code', "Tax Code", domain=[
                 ('authority', '=', Eval('authority', -1)),
                 ('company', '=', Eval('company', -1)),
                 ],
@@ -371,11 +373,18 @@ class TaxBoundary(TaxAuthorityMixin, ModelView, ModelSQL):
         cursor.execute(*table.delete(where=where))
 
 
+class TaxKey(TaxAuthorityMixin, ModelView, ModelSQL):
+    "Tax Key"
+    __name__ = 'account.tax.boundary.tax_key'
+    value = fields.Char("Tax Key Value", required=True,
+        help="A composite key made of all applicable tax codes")
+
+
 class TaxCode(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax.code'
 
 
-class TaxCodeLine(metaclass=PoolMeta):
+class TaxCodeLine(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax.code.line'
 
     @classmethod
@@ -386,6 +395,9 @@ class TaxCodeLine(metaclass=PoolMeta):
         cls.tax.context['amount'] = Eval('amount')
         cls.tax.depends.add('amount')
         cls.code.ondelete = 'CASCADE'
+        cls.code.domain = [
+            ('authority', '=', Eval('authority', -1)),
+            cls.code.domain or []]
 
     @property
     def _line_domain(self):
@@ -416,19 +428,32 @@ class TaxLine(metaclass=PoolMeta):
 class TaxRule(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax.rule'
 
+    def apply(self, tax, pattern):
+        pool = Pool()
+        TaxKey = pool.get('account.tax.boundary.tax_key')
+
+        pattern = pattern.copy()
+        tax_key = pattern.pop('tax_key', None)
+        if tax_key:
+            tax_key = TaxKey(tax_key)
+            pattern['tax_key'] = tax_key.value.split('-')
+        return super().apply(tax, pattern)
+
 
 class TaxRuleLine(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax.rule.line'
-    tax_key = fields.Char("Tax Key", states={
-                'required': Bool(Eval('authority')),
-                'invisible': ~Bool(Eval('authority', -1)),
-                }, domain = [
-                    ('rule.authority', '=', Eval('authority', -1)),
-                ], help="A composite key made of all applicable tax codes")
+
+    @classmethod
+    def __setup__(cls):
+        super().__setup__()
+        cls.rule.domain = [
+            ('authority', '=', Eval('authority', -1)),
+            cls.rule.domain or []]
 
     def match(self, pattern):
         pattern = pattern.copy()
-        tax_key = pattern.pop('tax_key')
-        if self.tax_key != tax_key:
+        tax_key = pattern.pop('tax_key', None)
+        if not tax_key or not self.tax or not self.tax.code or (
+            self.tax.code not in tax_key):
             return False
         return super().match(pattern)

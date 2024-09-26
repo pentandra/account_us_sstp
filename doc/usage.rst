@@ -10,20 +10,23 @@ Usage
 
 .. _currently supported: https://www.streamlinedsalestax.org/Shared-Pages/State-Detail
 
-.. _Dynamic resolution of taxes:
+.. _setting the customer tax rule:
 
-Dynamic resolution of taxes
-===========================
+Setting the customer tax rule
+=============================
 
-For the most part, if you have run the :doc:`provided scripts <setup>` and
-follow the Tryton `Sale <sale:model-sale.sale>` workflow, dynamic resolution of
-taxes should just work for you. However, here are a couple tips for a smooth
-operation:
+Once the tax rates and boundaries have been imported using the :doc:`provided
+scripts <setup>`, here are a couple tips for a smooth operation:
 
-1. If a *Customer Tax Rule* is set for a `Party <party:model-party.party>` or a
-   *Default Customer Tax Rule* is set in [:menuselection:`Account
-   Configuration`], this will override the dynamic resolution. The current
-   design will only try to resolve a tax rule if these fields are not set.
+1. Before making a `Sale <sale:model-sale.sale>` be sure a *Customer Tax Rule*
+   is set for the `Party <party:model-party.party>` of the sale.
+
+.. tip::
+
+   If you set a *Default Customer Tax Rule* in [:menuselection:`Account
+   Configuration`] to the tax rule for your state, this will automatically set
+   the customer tax rule to this value when creating new parties. This is
+   helpful if you do most of your business in one state.
 
 .. seealso::
 
@@ -44,11 +47,15 @@ operation:
       .. |Financial --> Configuration --> Configuration| replace:: :menuselection:`Financial --> Configuration --> Configuration`
       __ https://demo.tryton.org/model/account.configuration/1
 
-2. In order to determine the correct taxes, the *Shipping Address* of the
-   customer and a *Warehouse* (with an address) need to be entered into the
-   `Sale <sale:model-sale.sale>` form before adding sale lines. This
-   requirement actually comes from the :doc:`Account Tax Rule Country Module
-   <account_tax_rule_country:index`.
+2. In order to determine the correct destination taxes, both the *Shipping
+   Address* of the *Party* and a *Warehouse* (with an address from whence the
+   goods will be shipped) need to be present on the `Sale
+   <sale:model-sale.sale>` form before adding sale lines.
+
+.. note::
+
+   This requirement actually comes from the :doc:`Account Tax Rule Country
+   Module <account_tax_rule_country:index>`.
 
 .. seealso::
 

@@ -134,12 +134,14 @@ class InvoiceLine(BoundaryLocatorMixin, metaclass=PoolMeta):
         else:
             tax_date = Date.today()
 
+        tax_key = None
         if self.invoice and self.invoice.invoice_address:
             boundary = self.get_boundary(
                 self.invoice.invoice_address, tax_date)
+            if boundary:
+                tax_key = boundary.tax_key
 
-        pattern['tax_key'] = (
-            boundary.tax_key if boundary and boundary.tax_key else None)
+        pattern['tax_key'] = tax_key.id if tax_key else None
 
         return pattern
 

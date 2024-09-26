@@ -16,6 +16,7 @@ def register():
         tax.TaxCode,
         tax.TaxCodeLine,
         tax.TaxCodeContext,
+        tax.TaxKey,
         tax.TaxLine,
         tax.TaxRule,
         tax.TaxRuleLine,
