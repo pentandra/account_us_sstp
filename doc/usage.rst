@@ -76,3 +76,7 @@ Opening the [:menuselection:`Financial --> Reporting --> Chart of Tax Codes`]
 reveals two additional parameters from the Streamlined Sales Tax data:
 *Sourcing* and *Product Class*. You can adjust these to filter the types of
 taxes that are used for your tax reporting.
+
+If a state reports using composite SER codes, this report filters out those tax
+lines that do not have the applicable code. Amounts and corresponding `Tax
+Lines <model-account.tax.line>` will respect any applicable SER codes.

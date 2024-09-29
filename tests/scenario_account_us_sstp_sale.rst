@@ -7,12 +7,11 @@ invoice. Three types of boundary records will be tested: Zip, ZipPlus4, and
 Address. Product Categories will carry a generic tax that should be converted
 to a real tax. For simplicity, this test will use a *Tax Rule* without a group;
 normally taxes will belong to a group when you are using them (and you will
-have more than one tax to deal with). The scenario will use a target tax with a
-reporting code and one without to test both possibilities in tax reporting.
+have more than one tax to deal with). The scenario will use a target tax
+boundary with a composite :abbr:`SER (Simplified Electronic Return)` code and
+one without to test both possibilities in tax reporting.
 
-See :doc:`this scenario <account_us_sstp_default_taxes>` for default taxes.
-
-.. TODO: introduce another set of tax codes that do not use a reporting code?
+See `this scenario <scenario_account_us_sstp_default_taxes>` for default taxes.
 
 .. _setup:
 
@@ -26,7 +25,7 @@ Imports::
 
     >>> from proteus import Model
     >>> from trytond.modules.account.tests.tools import (
-    ...     create_chart, create_fiscalyear, create_tax, create_tax_code, get_accounts)
+    ...     create_chart, create_fiscalyear, create_tax, get_accounts)
     >>> from trytond.modules.account_invoice.tests.tools import (
     ...     set_fiscalyear_invoice_sequences)
     >>> from trytond.modules.company.tests.tools import create_company, get_company
@@ -99,7 +98,15 @@ Create taxes::
 
 Create tax codes::
 
-    >>> base_code = create_tax_code(tax, 'base', 'invoice')
+    >>> TaxCode = Model.get('account.tax.code')
+    >>> base_code = TaxCode(authority=authority)
+    >>> base_code.name = "Tax code (bases)"
+    >>> line = base_code.lines.new()
+    >>> line.authority = authority
+    >>> line.operator = '+'
+    >>> line.tax = tax
+    >>> line.amount = 'base'
+    >>> line.type = 'invoice'
     >>> line = base_code.lines.new()
     >>> line.authority = authority
     >>> line.operator = '+'
@@ -107,9 +114,14 @@ Create tax codes::
     >>> line.amount = 'base'
     >>> line.type = 'invoice'
     >>> base_code.save()
-    >>> tax_code = create_tax_code(tax, 'tax', 'invoice')
-    >>> tax_code.authority = authority
-    >>> tax_code.code = 'foo'
+    >>> tax_code = TaxCode(authority=authority)
+    >>> tax_code.name = "Tax Code (taxes)"
+    >>> line = tax_code.lines.new()
+    >>> line.authority = authority
+    >>> line.operator = '+'
+    >>> line.tax = tax
+    >>> line.amount = 'tax'
+    >>> line.type = 'invoice'
     >>> line = tax_code.lines.new()
     >>> line.authority = authority
     >>> line.operator = '+'
@@ -117,6 +129,38 @@ Create tax codes::
     >>> line.amount = 'tax'
     >>> line.type = 'invoice'
     >>> tax_code.save()
+
+    >>> ser_base_code = TaxCode(authority=authority)
+    >>> ser_base_code.name = "SER Tax Code (bases)"
+    >>> line = ser_base_code.lines.new()
+    >>> line.authority = authority
+    >>> line.operator = '+'
+    >>> line.tax = tax
+    >>> line.amount = 'base'
+    >>> line.type = 'invoice'
+    >>> line = ser_base_code.lines.new()
+    >>> line.authority = authority
+    >>> line.operator = '+'
+    >>> line.tax = food_tax
+    >>> line.amount = 'base'
+    >>> line.type = 'invoice'
+    >>> ser_base_code.save()
+    >>> ser_tax_code = TaxCode(authority=authority)
+    >>> ser_tax_code.name = "SER Tax Code (taxes)"
+    >>> ser_tax_code.code = 'foo'
+    >>> line = ser_tax_code.lines.new()
+    >>> line.authority = authority
+    >>> line.operator = '+'
+    >>> line.tax = tax
+    >>> line.amount = 'tax'
+    >>> line.type = 'invoice'
+    >>> line = ser_tax_code.lines.new()
+    >>> line.authority = authority
+    >>> line.operator = '+'
+    >>> line.tax = food_tax
+    >>> line.amount = 'tax'
+    >>> line.type = 'invoice'
+    >>> ser_tax_code.save()
 
 Create tax rule::
 
@@ -157,6 +201,7 @@ Create tax boundaries::
     >>> boundary.zipcode_high = '60000'
     >>> boundary.zipext_low = '3000'
     >>> boundary.zipext_high = '4000'
+    >>> boundary.code = tax_code
     >>> boundary.save()
     >>> boundary = TaxBoundary(authority=authority)
     >>> boundary.tax_key = tax_key
@@ -165,7 +210,7 @@ Create tax boundaries::
     >>> boundary.type = 'Z'
     >>> boundary.zipcode_low = '80000'
     >>> boundary.zipcode_high = '85000'
-    >>> boundary.code = tax_code
+    >>> boundary.code = ser_tax_code
     >>> boundary.save()
     >>> boundary = TaxBoundary(authority=authority)
     >>> boundary.tax_key = tax_key
@@ -268,6 +313,7 @@ Create product::
     >>> product, = template.products
 
     >>> template_food, = template.duplicate()
+    >>> template_food.name = 'food product'
     >>> template_food.account_category = account_category_tax_food
     >>> template_food.save()
     >>> food, = template_food.products
@@ -338,7 +384,13 @@ Customer 2 Tests ('Z' boundary resolution)
 
 For no other reason than that the ZIP Code search is simplest, I'm testing the
 ``foo`` tax code logic in this section. Notice that the matching boundary
-record was the only one set with a tax code as part of the :ref:`setup`.
+record was the only one set with a SER tax code as part of the `setup`. If a
+boundary record has a tax code relation, that means that all taxes should be
+reported within that boundary under a composite SER code, rather than as
+multiple codes. To enable this behavior, if a reporting code exists on a
+boundary's tax code, the code is copied to each `Tax Line
+<model-account.tax.line>` of a transaction. In the `corresponding report
+<Viewing your tax code data>`, only the applicable tax lines are shown.
 
 Create sale::
 
@@ -409,47 +461,51 @@ Check food invoice::
 
 Check tax codes::
 
-    >>> TaxCode = Model.get('account.tax.code')
     >>> with config.set_context(periods=period_ids):
-    ...     base_code = TaxCode(base_code.id)
-    ...     tax_code = TaxCode(tax_code.id)
-    >>> base_code.amount
+    ...     ser_base_code = TaxCode(ser_base_code.id)
+    ...     ser_tax_code = TaxCode(ser_tax_code.id)
+    >>> ser_base_code.amount
     Decimal('100.00')
-    >>> tax_code.amount
+    >>> ser_tax_code.amount
     Decimal('6.25')
     >>> with config.set_context(periods=period_ids, product_class='general'):
-    ...     base_code = TaxCode(base_code.id)
-    ...     tax_code = TaxCode(tax_code.id)
-    >>> base_code.amount
+    ...     ser_base_code = TaxCode(ser_base_code.id)
+    ...     ser_tax_code = TaxCode(ser_tax_code.id)
+    >>> ser_base_code.amount
     Decimal('50.00')
-    >>> tax_code.amount
+    >>> ser_tax_code.amount
     Decimal('5.00')
     >>> with config.set_context(periods=period_ids, product_class='food'):
-    ...     base_code = TaxCode(base_code.id)
-    ...     tax_code = TaxCode(tax_code.id)
-    >>> base_code.amount
+    ...     ser_base_code = TaxCode(ser_base_code.id)
+    ...     ser_tax_code = TaxCode(ser_tax_code.id)
+    >>> ser_base_code.amount
     Decimal('50.00')
-    >>> tax_code.amount
+    >>> ser_tax_code.amount
     Decimal('1.25')
     >>> with config.set_context(periods=period_ids, sourcing='intrastate'):
-    ...     base_code = TaxCode(base_code.id)
-    ...     tax_code = TaxCode(tax_code.id)
-    >>> base_code.amount
+    ...     ser_base_code = TaxCode(ser_base_code.id)
+    ...     ser_tax_code = TaxCode(ser_tax_code.id)
+    >>> ser_base_code.amount
     Decimal('100.00')
-    >>> tax_code.amount
+    >>> ser_tax_code.amount
     Decimal('6.25')
     >>> with config.set_context(periods=period_ids, sourcing='interstate'):
-    ...     base_code = TaxCode(base_code.id)
-    ...     tax_code = TaxCode(tax_code.id)
-    >>> base_code.amount
+    ...     ser_base_code = TaxCode(ser_base_code.id)
+    ...     ser_tax_code = TaxCode(ser_tax_code.id)
+    >>> ser_base_code.amount
     Decimal('0.00')
-    >>> tax_code.amount
+    >>> ser_tax_code.amount
     Decimal('0.00')
 
 .. _Customer 3 tests:
 
 Customer 3 Tests ('4' boundary resolution)
 ==========================================
+
+In contrast to `Customer 2 tests`, this section will use a boundary with a
+non-SER tax code relation (which should not normally exist). In addition to
+testing the resolution of a ``4`` address type, we will demonstrate that this
+scenario shouldn't fail.
 
 Create sale::
 
@@ -474,6 +530,16 @@ Check invoice::
     >>> assertEqual(line_tax, tax)
     >>> invoice.total_amount
     Decimal('110.00')
+    >>> invoice.click('post')
+    >>> invoice.state
+    'posted'
+
+    >>> move = invoice.move
+    >>> move.state
+    'posted'
+    >>> move_line, = [l for l in move.lines if l.account == accounts['tax']]
+    >>> tax_line, = move_line.tax_lines
+    >>> assertEqual(tax_line.code, None)
 
 Create food sale::
 
@@ -497,6 +563,17 @@ Check food invoice::
     >>> assertEqual(line_tax, food_tax)
     >>> invoice.total_amount
     Decimal('51.25')
+    >>> invoice.click('post')
+    >>> invoice.state
+    'posted'
+
+    >>> move = invoice.move
+    >>> move.state
+    'posted'
+    >>> move_line, = [l for l in move.lines if l.account == accounts['tax']]
+    >>> tax_line, = move_line.tax_lines
+    >>> assertEqual(tax_line.code, None)
+
 
 .. _Customer 4 tests:
 
