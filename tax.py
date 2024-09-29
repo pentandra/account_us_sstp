@@ -77,10 +77,12 @@ class TaxAuthorityMixin:
 
 class Tax(TaxAuthorityMixin, metaclass=PoolMeta):
     __name__ = 'account.tax'
-    place = fields.Many2One('country.subdivision', "Related Place",
-            states={
-                'invisible': ~Eval('authority') | Bool(Eval('parent')),
-                })
+    place = fields.Many2One(
+        'country.subdivision', "Related Place", domain=[
+            ('code_fips', '=', Eval('code')),
+        ], states={
+            'invisible': ~Eval('authority') | Bool(Eval('parent')),
+            })
     code = fields.Char("Jurisdiction Code", size=5, states={
         'required': Bool(Eval('authority')),
         'invisible': ~Eval('authority') | Bool(Eval('parent')),
